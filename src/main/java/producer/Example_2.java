@@ -16,16 +16,15 @@ import java.util.Properties;
 public class Example_2 {
     public static void main(String args[]){
         Properties props = new Properties();
-        props.put("bootstrap.servers", "localhost:9092");
+        props.put("bootstrap.servers", "120.78.160.135:9092");
         props.put("transactional.id", "my-transactional-id");
         Producer<String, String> producer = new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
-
         producer.initTransactions();
 
         try {
             producer.beginTransaction();
-            for (int i = 0; i < 100; i++)
-                producer.send(new ProducerRecord<>("my-topic", Integer.toString(i), Integer.toString(i)));
+            for (int i = 0; i < 10; i++)
+                producer.send(new ProducerRecord<>("test", Integer.toString(i), Integer.toString(i)));
             producer.commitTransaction();
         } catch (ProducerFencedException | OutOfOrderSequenceException | AuthorizationException e) {
             //我们无法从这些例外中恢复，因此我们唯一的选择是关闭生产者并退出。
