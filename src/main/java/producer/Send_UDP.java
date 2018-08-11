@@ -1,6 +1,5 @@
 package producer;
 
-import com.sun.org.apache.xerces.internal.util.SymbolTable;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
