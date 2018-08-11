@@ -32,7 +32,7 @@ public class SendOneFile {
      */
     public static FTPClient getFtpClient() {
         //ftp服务器地址
-        String url = "120.78.160.135";
+        String url = "127.0.0.1";
         //ftp服务器端口号默认为21
         Integer port = 21 ;
         //ftp登录账号

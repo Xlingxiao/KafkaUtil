@@ -26,12 +26,19 @@ public class SendPathFile {
     private static void AllFileText(FTPClient ftpClient, String path,String topic){
         Producer<String,String> producer = getProducer();
         try {
+//            FTP协议默认只支持iso-8859-1的编码格式，
+//            这里我们转换中文文件名为字节形式
+//            将字节形式转为iso-8859-1的编码
+            path = new String(path.getBytes("UTF-8"),"iso-8859-1");
 //            判断改变工作路径是否成功
             boolean ff = ftpClient.changeWorkingDirectory(path);
             if(ff){
                 FTPFile[] fs = ftpClient.listFiles();
 //                    只获取服务器上的前十个文件
                 for(int i =0;i<5;i++){
+//                    判断文件路径下没有那么多文件的话就退出
+                    if (fs.length<=i)
+                        break;
                     FTPFile file = fs[i];
                     System.out.println(path+"/"+file.getName());
                     if (file.isDirectory()){
@@ -52,6 +59,9 @@ public class SendPathFile {
 //                这里调用了上面的SendOneFile里面的Producer方法
                     StartProducer(producer,topic,sb);
                 }
+//                遍历一个目录之后退出
+                ftpClient.changeToParentDirectory();
+//                这里要改变关闭producer 的位置
                 endProducer(producer,topic);
             }
             else{
