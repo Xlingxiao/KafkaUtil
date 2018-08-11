@@ -23,8 +23,7 @@ import static producer.FTP.SendOneFile.*;
 
 public class SendPathFile {
 
-    private static void AllFileText(FTPClient ftpClient, String path,String topic){
-        Producer<String,String> producer = getProducer();
+    private static void AllFileText(FTPClient ftpClient, String path,Producer<String,String> producer, String topic){
         try {
 //            FTP协议默认只支持iso-8859-1的编码格式，
 //            这里我们转换中文文件名为字节形式
@@ -42,27 +41,31 @@ public class SendPathFile {
                     FTPFile file = fs[i];
                     System.out.println(path+"/"+file.getName());
                     if (file.isDirectory()){
-                        AllFileText(ftpClient,file.getName(),topic);
+                        AllFileText(ftpClient,file.getName(),producer, topic);
                     }
-                    InputStream is = ftpClient.retrieveFileStream(file.getName());
-                    BufferedReader br = new BufferedReader(new InputStreamReader(is,"UTF-8"));
+                    else if(file.isFile()){
+//                        将文件名转为iso-8859-1
+                        String name = new String(file.getName().getBytes("UTF-8"),"iso-8859-1");
+                        InputStream is = ftpClient.retrieveFileStream(name);
+                        BufferedReader br = new BufferedReader(new InputStreamReader(is,"UTF-8"));
 //                    解析ftp文件
-                    StringBuilder sb = ProcessContent(br);
+                        StringBuilder sb = ProcessContent(br);
                     /*官方要求在调用retrieveFileStream()方法下载文件时必须有执行
                     completePendingCommand()，等FTP Server返回226 Transfer complete
                     但是FTP Server只有在接受到InputStream 执行close方法时，才会返回。
                     所以一定先要执行close方法。不然在第一次下载一个文件成功之后，
                     之后再次获取inputStream 就会返回null。*/
-                    br.close();
-                    is.close();
-                    ftpClient.completePendingCommand();
-//                这里调用了上面的SendOneFile里面的Producer方法
-                    StartProducer(producer,topic,sb);
+                        br.close();
+                        is.close();
+                        ftpClient.completePendingCommand();
+//                      这里调用了上面的SendOneFile里面的Producer方法
+                        StartProducer(producer,topic,sb);
+                    }
+                    else
+                        break;
                 }
 //                遍历一个目录之后退出
                 ftpClient.changeToParentDirectory();
-//                这里要改变关闭producer 的位置
-                endProducer(producer,topic);
             }
             else{
                 System.out.println("更改FTP工作路径失败！");
@@ -75,10 +78,12 @@ public class SendPathFile {
     @Test
     public void testUpLoadFromString(){
         String topic = "test";
-        String remotePath = "./code/jupyter/tmp/haerbing/";
+        String remotePath = "./code/jupyter/tmp/";
         FTPClient ftpClient = getFtpClient();
         if (ftpClient!=null){
-            AllFileText(ftpClient,remotePath,topic);
+            Producer<String,String> producer = getProducer();
+            AllFileText(ftpClient,remotePath,producer,topic);
+            endProducer(producer,topic);
         }
         else{
             System.out.println("获取ftp对象失败");

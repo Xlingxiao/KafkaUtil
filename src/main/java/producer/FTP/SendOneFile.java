@@ -32,7 +32,7 @@ public class SendOneFile {
      */
     public static FTPClient getFtpClient() {
         //ftp服务器地址
-        String url = "127.0.0.1";
+        String url = "120.78.160.135";
         //ftp服务器端口号默认为21
         Integer port = 21 ;
         //ftp登录账号
@@ -118,7 +118,7 @@ public class SendOneFile {
             while ((msg=br.readLine())!= null) {
                 sb.append(msg);
                 sb.append("\r\n");
-                System.out.println(msg);
+                msg=new String(msg.getBytes("iso-8859-1"),"UTF-8");
             }
         }catch (IOException e){
             sb = null;
@@ -130,7 +130,7 @@ public class SendOneFile {
 
     public static Producer<String,String> getProducer(){
         Properties props = new Properties();
-        props.put("bootstrap.servers", "172.16.2.23:9092");   //用于初始化kafka集群，中用逗号分隔
+        props.put("bootstrap.servers", "120.78.160.135:9092");   //用于初始化kafka集群，中用逗号分隔
         props.put("acks", "all");    //当所有的follow都拷贝到消息后再进行确认
         props.put("retries", 2);     //发送重试次数
         props.put("batch.size", 16384);     //控制批量发送消息的大小，减少访问服务端的次数提高性能
