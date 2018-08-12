@@ -47,7 +47,7 @@ public class SendPathFile {
 //                        将文件名转为iso-8859-1
                         String name = new String(file.getName().getBytes("UTF-8"),"iso-8859-1");
                         InputStream is = ftpClient.retrieveFileStream(name);
-                        BufferedReader br = new BufferedReader(new InputStreamReader(is,"UTF-8"));
+                        BufferedReader br = new BufferedReader(new InputStreamReader(is,"utf-8"));
 //                    解析ftp文件
                         StringBuilder sb = ProcessContent(br);
                     /*官方要求在调用retrieveFileStream()方法下载文件时必须有执行

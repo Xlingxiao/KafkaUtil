@@ -118,7 +118,6 @@ public class SendOneFile {
             while ((msg=br.readLine())!= null) {
                 sb.append(msg);
                 sb.append("\r\n");
-                msg=new String(msg.getBytes("iso-8859-1"),"UTF-8");
             }
         }catch (IOException e){
             sb = null;
