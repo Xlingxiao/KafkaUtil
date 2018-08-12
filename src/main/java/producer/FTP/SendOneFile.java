@@ -119,6 +119,7 @@ public class SendOneFile {
                 sb.append(msg);
                 sb.append("\r\n");
             }
+            System.out.println(sb);
         }catch (IOException e){
             sb = null;
             e.printStackTrace();

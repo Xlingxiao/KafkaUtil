@@ -34,12 +34,12 @@ public class SendPathFile {
             if(ff){
                 FTPFile[] fs = ftpClient.listFiles();
 //                    只获取服务器上的前十个文件
-                for(int i =0;i<5;i++){
+                for(int i =0;i<7;i++){
 //                    判断文件路径下没有那么多文件的话就退出
                     if (fs.length<=i)
                         break;
                     FTPFile file = fs[i];
-                    System.out.println(path+"/"+file.getName());
+                    System.out.println(file.getName());
                     if (file.isDirectory()){
                         AllFileText(ftpClient,file.getName(),producer, topic);
                     }
@@ -78,7 +78,7 @@ public class SendPathFile {
     @Test
     public void testUpLoadFromString(){
         String topic = "test";
-        String remotePath = "./code/jupyter/tmp/";
+        String remotePath = "./code/jupyter";
         FTPClient ftpClient = getFtpClient();
         if (ftpClient!=null){
             Producer<String,String> producer = getProducer();
