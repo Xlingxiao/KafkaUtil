@@ -26,8 +26,8 @@ public class Example_1 {
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         //生产者发送消息
-        String topic = "test";
         Producer<String, String> procuder = new KafkaProducer<String,String>(props);
+        String topic = "test";
         for (int i = 1; i <= 3; i++) {
             String value = "value_test_1_" + i;
             ProducerRecord<String, String> msg = new ProducerRecord<String, String>(topic, value);
