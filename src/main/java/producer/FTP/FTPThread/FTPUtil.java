@@ -6,18 +6,19 @@ import org.apache.commons.net.ftp.FTPReply;
 import org.apache.kafka.clients.producer.Producer;
 
 
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.*;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.SocketException;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 
 public class FTPUtil {
-    public static FTPClient getFtpClient() {
-        //获取FTP对象
+
+    //获取FTP对象
+    public FTPClient getFtpClient() {
         Properties props = new Properties();
         InputStream is = FTPUtil.class.getClassLoader().getResourceAsStream("FTP.properties");
         try {
@@ -53,7 +54,8 @@ public class FTPUtil {
         return ftp;
     }
 
-    private static String AllFilePath(FTPClient ftpClient, String path, Producer<String,String> producer, String topic){
+//    遍历目录添加到队列之中
+    public void AllFilePath(FTPClient ftpClient,BlockingQueue queue, String path){
         try {
 //            FTP协议默认只支持iso-8859-1的编码格式，
 //            这里我们转换中文文件名为字节形式
@@ -63,31 +65,24 @@ public class FTPUtil {
             boolean ff = ftpClient.changeWorkingDirectory(path);
             if(ff){
                 FTPFile[] fs = ftpClient.listFiles();
-//                    只获取服务器上的前十个文件
-                for(int i =0;i<7;i++){
-//                    判断文件路径下没有那么多文件的话就退出
+//                遍历文件
+//                for(FTPFile file:fs){
+                for(int i = 0; i<20;i++){
                     if (fs.length<=i)
                         break;
                     FTPFile file = fs[i];
-                    System.out.println(file.getName());
                     if (file.isDirectory()){
-                        AllFileText(ftpClient,file.getName(),producer, topic);
+                        this.AllFilePath(ftpClient,queue,ftpClient.printWorkingDirectory()+"/"+file.getName());
                     }
                     else if(file.isFile()){
 //                        将文件名转为iso-8859-1
-                        String name = new String(file.getName().getBytes("UTF-8"),"iso-8859-1");
-                        InputStream is = ftpClient.retrieveFileStream(name);
-                        BufferedReader br = new BufferedReader(new InputStreamReader(is,"utf-8"));
-//                    解析ftp文件
-                        StringBuilder sb = ProcessContent(br);
-                        br.close();
-                        is.close();
-                        ftpClient.completePendingCommand();
-//                      这里调用了上面的SendOneFile里面的Producer方法
-                        StartProducer(producer,topic,sb);
+                        path = new String(ftpClient.printWorkingDirectory()
+                                .getBytes("iso-8859-1"),"UTF-8")
+                                +"/"+file.getName();
+                        queue.put(path);
+                        if (queue.size()%20==0)
+                            System.out.println("目前的队列长度："+queue.size());
                     }
-                    else
-                        break;
                 }
 //                遍历一个目录之后退出
                 ftpClient.changeToParentDirectory();
@@ -97,10 +92,44 @@ public class FTPUtil {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            System.out.println(path+"添加队列失败！");
+            e.printStackTrace();
         }
     }
 
-    public static void endFtp(FTPClient ftpClient){
+//    得到队列中一个文件的内容
+    public StringBuilder getDownlod(FTPClient ftpClient,String path){
+        BufferedReader br = null;
+        StringBuilder sb =null;
+        try {
+            System.out.println(path);
+            path = new String(path.getBytes("UTF-8"),"iso-8859-1");
+            InputStream is = ftpClient.retrieveFileStream(path);
+            if(null==is){
+                System.out.println("输入资源地址出错！");
+                return sb;
+            }
+            br = new BufferedReader(new InputStreamReader(is,"utf-8"));
+            String msg ;
+            sb =new StringBuilder();
+            while (null!=(msg=br.readLine())){
+                sb.append(msg);
+            }
+            br.close();
+            is.close();
+            if (!ftpClient.completePendingCommand())
+                ;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sb;
+    }
+
+//    关闭FTP对象
+    public void endFtp(FTPClient ftpClient){
         try {
             ftpClient.disconnect();
             System.out.println("成功关闭与FTP服务器的连接");

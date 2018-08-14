@@ -13,9 +13,10 @@ import java.util.Properties;
  * @描述
  */
 public class producer2 {
-    private producer2() {
+    public producer2() {
     }
     private Producer<String,String> createProducer() {
+        System.out.println("==============");
         Properties props = new Properties();
         InputStream is = producer2.class.getClassLoader().getResourceAsStream("producer.properties");
         try {
@@ -31,7 +32,7 @@ public class producer2 {
         private static final Producer<String,String> producer = new producer2().createProducer();
     }
 
-    public static Producer<String,String> getProducer(){
+    public Producer<String,String> getProducer(){
         return create.producer;
     }
 }
