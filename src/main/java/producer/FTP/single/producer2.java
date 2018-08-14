@@ -1,4 +1,4 @@
-package producer.single;
+package producer.FTP.single;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -13,7 +13,7 @@ import java.util.Properties;
  * @描述
  */
 public class producer2 {
-    public producer2() {
+    private producer2() {
     }
     private Producer<String,String> createProducer() {
         Properties props = new Properties();

@@ -1,4 +1,4 @@
-package producer.single;
+package producer.FTP.single;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;

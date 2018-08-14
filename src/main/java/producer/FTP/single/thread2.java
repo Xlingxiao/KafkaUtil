@@ -1,8 +1,8 @@
-package producer.single;
+package producer.FTP.single;
 
 import org.apache.kafka.clients.producer.Producer;
 
-import static producer.single.producer2.getProducer;
+import static producer.FTP.single.producer2.getProducer;
 
 /**
  * @创建人

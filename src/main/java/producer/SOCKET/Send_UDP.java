@@ -1,4 +1,4 @@
-package producer;
+package producer.SOCKET;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
