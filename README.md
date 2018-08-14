@@ -6,6 +6,7 @@ kafka 的java基本使用
 4.	处理过的数据传给kafkaProducer，进行发送
 
 主要结构：
+
 1．Controller类负责控制这个程序的运行，内部有两个内部类，getFilePath和consumerFilePath，使用生产者消费者模式运行。
 
 2．getFilePath：生产url，目前只支持一个producer
@@ -24,5 +25,5 @@ StringBuilder getDownlod(FTPClient ftpClient,String path)	得到队列中一个�
 
 endFtp(FTPClient ftpClient)	关闭FTP对象
 
-5.	myProducer:
+6.myProducer:
 因为kafka producer后面的版本都是线程安全的了，所以采用单例模式创建producer使用单身模式创建一个KafkaProducer(),在需要使用到它发送消息的时候调用sendMsg()方法就可以了。
