@@ -13,6 +13,8 @@ import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class FTPUtil {
@@ -48,6 +50,7 @@ public class FTPUtil {
             ftp.enterLocalPassiveMode();
         } catch (SocketException e){
             System.out.println("连接ftp服务器出错");
+            return ftp;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -56,6 +59,7 @@ public class FTPUtil {
 
 //    遍历目录添加到队列之中
     public void AllFilePath(FTPClient ftpClient,BlockingQueue queue, String path){
+        Lock lock = new ReentrantLock();
         try {
 //            FTP协议默认只支持iso-8859-1的编码格式，
 //            这里我们转换中文文件名为字节形式
@@ -79,7 +83,13 @@ public class FTPUtil {
                         path = new String(ftpClient.printWorkingDirectory()
                                 .getBytes("iso-8859-1"),"UTF-8")
                                 +"/"+file.getName();
+                        if (queue.contains(path))
+                            continue;
+                        lock.lock();
+                        if (queue.contains(path))
+                            continue;
                         queue.put(path);
+                        lock.unlock();
                         if (queue.size()%20==0)
                             System.out.println("目前的队列长度："+queue.size());
                     }
