@@ -50,7 +50,7 @@ public class FTPUtil {
             ftp.enterLocalPassiveMode();
         } catch (SocketException e){
             System.out.println("连接ftp服务器出错");
-            return ftp;
+            return null;
         } catch (IOException e) {
             e.printStackTrace();
         }
