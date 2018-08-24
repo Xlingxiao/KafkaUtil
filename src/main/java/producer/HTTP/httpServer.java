@@ -35,7 +35,7 @@ public class httpServer {
         try {
 //            创建http服务器，指定绑定端口为8888
 //            100是阻塞请求的数量
-            HttpServer server = HttpServer.create(new InetSocketAddress(8888), 0);
+            HttpServer server = HttpServer.create(new InetSocketAddress(8888), 100);
 //            createContext中第一个参数指定url
 //            url指定为“/”时表示接受所有请求路径
 //            读取文件中所有的url来创建上下文

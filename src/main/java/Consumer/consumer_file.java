@@ -15,7 +15,7 @@ public class consumer_file {
 
     public static void main(String[] args) throws IOException {
         Properties props = new Properties();    //创建容器
-        props.put("bootstrap.servers", "localhost:9092");      //初始化kafka集群，配置服务器
+        props.put("bootstrap.servers", "172.16.2.24:9092");      //初始化kafka集群，配置服务器
         props.put("group.id", "0");         //consumer启动时配置文件中定义的groupid
         props.put("enable.auto.commit", "true"); //定期提交consumer的偏移量
         props.put("compression.type","snappy");

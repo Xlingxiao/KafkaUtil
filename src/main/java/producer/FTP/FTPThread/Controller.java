@@ -4,7 +4,6 @@ import org.apache.commons.net.ftp.FTPClient;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -17,7 +16,7 @@ public class Controller {
         BlockingQueue queue = new ArrayBlockingQueue(1000);
         getFilePath getPath = new getFilePath(queue,initPath);
         consumerFilePath consumerPath = new consumerFilePath(queue,topic);
-        for (int i =0;i<20;i++){
+        for (int i =0;i<1;i++){
             new Thread(getPath,"生产者-"+i).start();
         }
         for (int i =0;i<15;i++){

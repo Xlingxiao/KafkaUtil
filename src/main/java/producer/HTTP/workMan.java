@@ -82,6 +82,7 @@ public class workMan implements Runnable {
             OutputStream os = exchange.getResponseBody();
             os.write(fileConnect);
             os.close();
+            exchange.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
