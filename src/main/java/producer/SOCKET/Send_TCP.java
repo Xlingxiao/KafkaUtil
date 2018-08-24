@@ -20,10 +20,7 @@ public class Send_TCP {
 
         }
     }
-
 }
-
-
 
 class Task implements Runnable {
 
