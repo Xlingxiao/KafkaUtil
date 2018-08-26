@@ -1,4 +1,4 @@
-package producer;
+package producer.demo;
 
 import java.io.*;
 import java.util.Properties;
