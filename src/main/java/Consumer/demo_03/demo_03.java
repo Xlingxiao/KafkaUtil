@@ -10,10 +10,15 @@ import java.util.List;
  * @create: 2018/08/26 15:08
  **/
 public class demo_03 {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args){
+//        指定consumer消费的topic
         String topic ="webTopic";
+        int threadNum = 8;
         List<Thread> consumers = new ArrayList<>();
-        for (int i = 0; i < 8; i++) {
+//        根据分区的数量创建consumer的线程数保证一个分区一个consumer
+//        后期应该加入自动识别topic中有几个分区
+//        由此来指定consumer 的数量
+        for (int i = 0; i < threadNum; i++) {
             Thread consumer = new Thread(new myConsumer(i,topic,i));
             consumers.add(consumer);
             consumer.start();

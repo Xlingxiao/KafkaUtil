@@ -1,0 +1,32 @@
+package producer.FTP.FTPThread;
+
+import org.apache.commons.net.ftp.FTPClient;
+
+import java.util.concurrent.BlockingQueue;
+
+/**
+ * @program: KafkaUtil
+ * @description: 得到FTP服务器上指定的文件路径
+ * @author: Ling
+ * @create: 2018/08/28 09:43
+ **/
+class filePathProducer implements Runnable {
+    BlockingQueue queue;
+    String initPath ;
+    public filePathProducer(BlockingQueue queue, String initPath) {
+        this.queue = queue;
+        this.initPath = initPath;
+    }
+    /**
+     * 创建FTP对象
+     * 调用AllFilePath(ftpClient,queue,initPath);获取指定路径下所有文件路径
+     */
+    public void run() {
+        System.out.printf("生产文件路径者 %s启动\n",Thread.currentThread().getName());
+        FTPUtil util = new FTPUtil();
+        FTPClient ftpClient = util.getFtpClient();
+        if (ftpClient!=null)
+            util.AllFilePath(ftpClient,queue,initPath);
+        else System.out.println("生产者退出");
+    }
+}

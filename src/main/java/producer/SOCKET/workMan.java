@@ -3,6 +3,8 @@ package producer.SOCKET;
 import java.io.*;
 import java.net.Socket;
 
+import producer.demo.myProducer;
+
 
 public class workMan implements Runnable{
 

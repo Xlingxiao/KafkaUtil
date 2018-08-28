@@ -11,13 +11,16 @@ import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.Properties;
 
-//kafka官方例子2
+/**
+ * kafka官方例子2
+ * 手动提交发送的数据
+ */
 
 public class Example_2 {
     public static void main(String args[]){
         Properties props = new Properties();
         props.put("bootstrap.servers", "120.78.160.135:9092");
-        props.put("transactional.id", "my-transactional-id");
+        props.put("transactional.id", "1");
         Producer<String, String> producer = new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
         producer.initTransactions();
 
