@@ -9,28 +9,26 @@ import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.util.LinkedList;
 import java.util.List;
-
 /**
- * @创建人
- * @创建时间
- * @描述
- */
+* @Description: 提供restAPI供给客户端进行传输数据
+* @Author: Ling
+* @Date: 2018/8/28
+*/
 public class httpServer {
-    //    初始化url上下文
+//    初始化url上下文
     private List<String> initContext() throws IOException {
+//        获取上下文文件
         InputStream is = httpServer.class.getClassLoader().getResourceAsStream("http/conf/contextRout");
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
         String content ;
-        List<String> contexts = new LinkedList<String>();
+        List<String> contexts = new LinkedList<>();
+//        将文件加入到contexts中
         while (null!=(content=br.readLine())){
             contexts.add(content);
         }
         return contexts;
-//        for (String con:contexts) {
-//            System.out.println(con);
-//        }
     }
-    //    启动服务
+//    启动服务
     private void startServer(){
         try {
 //            创建http服务器，指定绑定端口为8888

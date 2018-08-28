@@ -116,7 +116,12 @@ public class FTPUtil {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
-            System.out.println(path+"添加队列失败！");
+            try {
+                System.out.println(
+                        new String(path.getBytes("iso-8859-1"),"utf-8")+"添加队列失败！");
+            } catch (UnsupportedEncodingException e1) {
+                e1.printStackTrace();
+            }
             e.printStackTrace();
         }
     }
@@ -143,7 +148,8 @@ public class FTPUtil {
 //            （文件之前存在之后被删除了）
 //            获取到的StringBuilder就为空
             if(null==is){
-                System.out.printf("获取资源输入流出错！%s\n",path);
+                System.out.printf("获取资源输入流出错！%s\n",
+                        new String(path.getBytes("iso-8859-1"),"utf-8"));
                 return sb;
             }
 //            使用utf-8的编码方式解码文件内容
@@ -165,7 +171,8 @@ public class FTPUtil {
                     sb = getDownload(ftpClient,path,retries-1);
                 }
                 else{
-                    System.out.printf("文件%s再下载重试次数范围内均下载失败\n",path);
+                    System.out.printf("文件%s再下载重试次数范围内均下载失败\n",
+                            new String(path.getBytes("iso-8859-1"),"utf-8"));
                 }
             }
         } catch (UnsupportedEncodingException e) {

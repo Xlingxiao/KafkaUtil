@@ -5,9 +5,13 @@ import java.net.Socket;
 
 import producer.demo.myProducer;
 
-
+/** 
+* @Description: 主要工作对象，在这里设置发送到kafka的topic
+* @Author: Ling
+* @Date: 2018/8/28 
+*/
 public class workMan implements Runnable{
-
+    
     private Socket socket;
     private String topic = "webTopic";
     private myProducer producer;
@@ -25,7 +29,6 @@ public class workMan implements Runnable{
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     private void handlerSocket() throws Exception {
