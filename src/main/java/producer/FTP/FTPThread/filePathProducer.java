@@ -27,6 +27,9 @@ class filePathProducer implements Runnable {
         FTPClient ftpClient = util.getFtpClient();
         if (ftpClient!=null)
             util.AllFilePath(ftpClient,queue,initPath);
-        else System.out.println("生产者退出");
+        else System.out.println("创建Ftp连接失败，退出");
+//        关闭FTP连接
+        util.endFtp(ftpClient,Thread.currentThread().getName());
+        System.out.println(Thread.currentThread().getName()+"处理结束---------");
     }
 }

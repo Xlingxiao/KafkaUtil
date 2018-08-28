@@ -3,16 +3,13 @@ package producer.FTP.FTPThread;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
-import org.apache.kafka.clients.producer.Producer;
 
 
 import java.io.*;
 
 import java.net.SocketException;
 import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -47,6 +44,8 @@ public class FTPUtil {
                 ftp.disconnect();
                 return null;
             }
+            ftp.setControlKeepAliveReplyTimeout(10*1000);
+            ftp.setDataTimeout(10*1000);
 //            ftp.setControlEncoding("UTF-8");
 //            nat网络环境下需要设置为被动模式
             ftp.enterLocalPassiveMode();
@@ -55,6 +54,7 @@ public class FTPUtil {
             return null;
         } catch (IOException e) {
             System.out.println("获取配置文件出错");
+            return null;
         }
         return ftp;
     }
@@ -78,12 +78,12 @@ public class FTPUtil {
             if(ff){
                 FTPFile[] fs = ftpClient.listFiles();
 //                遍历文件,下面两行可以选择遍历的深度和次数
-//                for(FTPFile file:fs){
-                for(int i = 0; i<20;i++){
+                for(FTPFile file:fs){
+//                for(int i = 0; i<20;i++){
 //                    如果文件夹中没有指定的文件数量就不再遍历下去
-                    if (fs.length<=i)
-                        break;
-                    FTPFile file = fs[i];
+//                    if (fs.length<=i)
+//                        break;
+//                    FTPFile file = fs[i];
 //                    如果判断文件为文件夹递归调用这个函数
                     if (file.isDirectory()){
                         this.AllFilePath(ftpClient,queue,ftpClient.printWorkingDirectory()+"/"+file.getName());
@@ -101,7 +101,7 @@ public class FTPUtil {
                         if (queue.contains(path))
                             continue;
                         queue.put(path);
-                        System.out.println(new String(path.getBytes("iso-8859-1"),"utf-8"));
+//                        System.out.println(new String(path.getBytes("iso-8859-1"),"utf-8"));
                         lock.unlock();
                         if (queue.size()%20==0)
                             System.out.println("目前的队列长度："+queue.size());
@@ -129,7 +129,7 @@ public class FTPUtil {
      * @param retries 传输文件失败后重试次数
      * @return
      */
-    public StringBuilder getDownlod(FTPClient ftpClient,String path,int retries){
+    public StringBuilder getDownload(FTPClient ftpClient, String path, int retries){
         BufferedReader br = null;
         StringBuilder sb =null;
         try {
@@ -162,7 +162,7 @@ public class FTPUtil {
 //            如果传输失败重试retries次
                 if (retries>0){
 //                    path = new String(path.getBytes("iso-8859-1"),"UTF-8");
-                    sb = getDownlod(ftpClient,path,retries-1);
+                    sb = getDownload(ftpClient,path,retries-1);
                 }
                 else{
                     System.out.printf("文件%s再下载重试次数范围内均下载失败\n",path);
@@ -177,10 +177,10 @@ public class FTPUtil {
     }
 
 //    关闭FTP对象
-    public void endFtp(FTPClient ftpClient){
+    public void endFtp(FTPClient ftpClient,String name){
         try {
             ftpClient.disconnect();
-            System.out.println("成功关闭与FTP服务器的连接");
+            System.out.println(name+":关闭与FTP服务器的连接");
         } catch (IOException e) {
             e.printStackTrace();
         }
