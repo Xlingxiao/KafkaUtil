@@ -63,7 +63,7 @@ public class FTPUtil {
      *@描述 遍历目录添加到队列之中
      *@参数  [FTPClient ftpClient,BlockingQueue queue, String path]
      *@返回值  void
-     *@创建人  Lingxiao
+     *@创建人  Ling
      *@创建时间  2018/8/28
      */
     public void AllFilePath(FTPClient ftpClient,BlockingQueue queue, String path){
@@ -132,11 +132,11 @@ public class FTPUtil {
      * @param ftpClient FTP对象
      * @param path 目标文件全路径
      * @param retries 传输文件失败后重试次数
-     * @return
+     * @return StringBuilder 服务器上下载的内容
      */
     public StringBuilder getDownload(FTPClient ftpClient, String path, int retries){
-        BufferedReader br = null;
-        StringBuilder sb =null;
+        BufferedReader br;
+        StringBuilder stringBuilder =null;
         try {
 //            打印文件绝对路径
 //            System.out.println(path);
@@ -150,14 +150,14 @@ public class FTPUtil {
             if(null==is){
                 System.out.printf("获取资源输入流出错！%s\n",
                         new String(path.getBytes("iso-8859-1"),"utf-8"));
-                return sb;
+                return null;
             }
 //            使用utf-8的编码方式解码文件内容
             br = new BufferedReader(new InputStreamReader(is,"utf-8"));
             String msg ;
-            sb =new StringBuilder();
+            stringBuilder =new StringBuilder();
             while (null!=(msg=br.readLine())){
-                sb.append(msg);
+                stringBuilder.append(msg);
             }
             br.close();
             is.close();
@@ -168,19 +168,17 @@ public class FTPUtil {
 //            如果传输失败重试retries次
                 if (retries>0){
 //                    path = new String(path.getBytes("iso-8859-1"),"UTF-8");
-                    sb = getDownload(ftpClient,path,retries-1);
+                    stringBuilder = getDownload(ftpClient,path,retries-1);
                 }
                 else{
                     System.out.printf("文件%s再下载重试次数范围内均下载失败\n",
                             new String(path.getBytes("iso-8859-1"),"utf-8"));
                 }
             }
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return sb;
+        return stringBuilder;
     }
 
 //    关闭FTP对象

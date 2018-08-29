@@ -1,7 +1,6 @@
 package producer.FTP.FTPThread;
 
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
 /**
  * 根据生产者消费者方式创建
@@ -16,11 +15,15 @@ import java.util.concurrent.BlockingQueue;
  */
 public class FTPStart {
     public static void main(String[] args) {
+//        指定发送的topic
         String topic = "webTopic";
+//        指定FTP服务器上的文件初始文件夹
         String initPath = "./code/jupyter/tmp";
-        BlockingQueue queue = new ArrayBlockingQueue(1000);
+//        下载文件失败后的重试次数
+        int retries = 3;
+        ArrayBlockingQueue queue = new ArrayBlockingQueue(1000);
         filePathProducer pathProducer = new filePathProducer(queue,initPath);
-        filePathConsumer pathConsumer = new filePathConsumer(queue,topic);
+        filePathConsumer pathConsumer = new filePathConsumer(queue,retries,topic);
         for (int i =0;i<2;i++){
             new Thread(pathProducer,"生产者-"+i).start();
         }

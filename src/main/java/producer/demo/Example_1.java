@@ -16,7 +16,7 @@ public class Example_1 {
     public static void main(String[] args) {
 
         Properties props = new Properties();
-        props.put("bootstrap.servers", "120.78.160.135:9092");   //用于初始化kafka集群，中用逗号分隔
+        props.put("bootstrap.servers", "172.16.2.23:9092");   //用于初始化kafka集群，中用逗号分隔
         props.put("acks", "all");    //当所有的follow都拷贝到消息后再进行确认
         props.put("retries", 0);     //发送重试次数
         props.put("batch.size", 16384);     //控制批量发送消息的大小，减少访问服务端的次数提高性能
@@ -27,7 +27,7 @@ public class Example_1 {
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         //生产者发送消息
         Producer<String, String> procuder = new KafkaProducer<String,String>(props);
-        String topic = "test";
+        String topic = "webTopic";
         for (int i = 1; i <= 3; i++) {
             String value = "value_test_1_" + i;
             ProducerRecord<String, String> msg = new ProducerRecord<String, String>(topic, value);

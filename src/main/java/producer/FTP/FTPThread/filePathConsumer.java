@@ -20,19 +20,26 @@ class filePathConsumer implements Runnable {
      * @param topic 需要发送到kafka 的topic
      * @param lock 线程锁
      */
-    int retries = 3;
-    BlockingQueue<String> queue;
-    String topic;
-    Lock lock = new ReentrantLock();
-    public filePathConsumer(BlockingQueue queue, String topic) {
+    private int retries;
+    private BlockingQueue queue;
+    private String topic;
+    private Lock lock = new ReentrantLock();
+    filePathConsumer(BlockingQueue queue,int retries, String topic) {
         this.queue = queue;
+        this.retries = retries;
         this.topic = topic;
     }
 
     public void run() {
         System.out.printf("消费文件路径者 %s 启动\n",Thread.currentThread().getName());
 //        刚开始时队列为空所有消费者都开始等待
-        while (queue.size()<30){}
+        while(queue.size()<30){
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 //        获取FTPClien对象
         FTPUtil util = new FTPUtil();
         FTPClient ftpClient = util.getFtpClient();
@@ -41,7 +48,7 @@ class filePathConsumer implements Runnable {
             ProcessContent process = new ProcessContent();
 //            发送处理过的文件内容的对象
             myProducer myproducer = new myProducer();
-            StringBuilder sb = null;
+            StringBuilder sb;
             while (!queue.isEmpty()){
 //            如果队列是空的不进行下面的操作
                 lock.lock();
@@ -49,14 +56,14 @@ class filePathConsumer implements Runnable {
                     lock.unlock();
                     continue;
                 }
-                String path = this.queue.poll();
+                String path = (String) this.queue.poll();
                 lock.unlock();
 //                下载文件内容,指定文件下载失败后的重试次数
                 sb = util.getDownload(ftpClient,path,retries);
                 if (sb==null) continue;
 //                对文件内容进行处理
                 sb = process.startProcess(sb);
-//                查看处理后的文件第一个“，”之前的内容
+//                查看处理后的文件第一个“，”之前的内容t
                 System.out.println(sb.toString().split(",",2)[0]);
 //                发送处理过的内容
                 myproducer.sendMsg(this.topic,sb);

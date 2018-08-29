@@ -13,12 +13,14 @@ import producer.demo.myProducer;
 public class workMan implements Runnable{
     
     private Socket socket;
-    private String topic = "webTopic";
+    private String topic;
     private myProducer producer;
     private StringBuilder sb = new StringBuilder();
 
-    public workMan(Socket socket) {
+    workMan(Socket socket, String topic) {
+
         this.socket = socket;
+        this.topic = topic;
     }
 
     @Override
@@ -42,7 +44,7 @@ public class workMan implements Runnable{
      */
     private void clientRequest(){
         // 跟客户端建立好连接之后，我们就可以获取socket的InputStream，并从中读取客户端发过来的信息了
-        BufferedReader br = null;
+        BufferedReader br;
         try {
             br = new BufferedReader(
                     new InputStreamReader(socket.getInputStream(), "UTF-8"));

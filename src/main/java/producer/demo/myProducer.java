@@ -28,15 +28,14 @@ public class myProducer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Producer<String,String> producer = new KafkaProducer<String, String>(props);
-        return producer;
+        return new KafkaProducer<>(props);
     }
 
-//    内部类用于保证创建单例的producer
+//    内部类用于保证创建单例的produer
     private static class broker{
         private static final Producer<String,String> inProducer = new myProducer().createMyProducer();
     }
-//    返回一个producer对象
+
     public Producer<String,String> getProducer(){
         return broker.inProducer;
     }
@@ -45,11 +44,11 @@ public class myProducer {
      * 将sb对象转为string后发送到kafka topic
      * kafka producer对象不存在时会默认创建一个
      * 对象存在时会直接使用创建好的对象
-     * @param topic
-     * @param sb
+     * @param topic 发布的话题
+     * @param sb 需要发布的内容
      */
     public void sendMsg(String topic, StringBuilder sb){
-        ProducerRecord<String, String> msg = new ProducerRecord<String, String>(topic, sb.toString());
+        ProducerRecord<String, String> msg = new ProducerRecord<>(topic, sb.toString());
         try {
             broker.inProducer.send(msg);
         }catch (IllegalStateException e){

@@ -6,10 +6,11 @@ import producer.demo.myProducer;
 import java.io.*;
 
 /** 
-* @Description:  
-* @Author: Ling
-* @Date: 2018/8/28 
-*/
+ * @Description:  接收客户端请求使用request进行获取请求内容
+ *                 使用response进行响应
+ * @Author: Ling
+ * @Date: 2018/8/28
+ */
 
 public class workMan implements Runnable {
 
@@ -21,13 +22,18 @@ public class workMan implements Runnable {
 //    响应地址
     private String responseUrl;
 //    请求内容
-    private StringBuilder sb = new StringBuilder();
+    private StringBuilder stringBuilder;
 //    kafka producer
     private myProducer producer ;
 //    kafka Topic
-    private String topic = "test" ;
-    public workMan(HttpExchange httpExchange) {
+    private String topic = "webTopic" ;
+    workMan(HttpExchange httpExchange) {
         this.httpExchange = httpExchange;
+        stringBuilder = new StringBuilder();
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 
     public void setHttpExchange(HttpExchange httpExchange) {
@@ -42,8 +48,15 @@ public class workMan implements Runnable {
     public void run() {
         try {
             httpRequest(httpExchange);
-            httpResponse(httpExchange);
-            sendToKafka();
+            if(stringBuilder!=null){
+//                httpResponse(httpExchange);
+                sResponse(httpExchange,"SUCCESS");
+                sendToKafka();
+//            使用完StringBuilder之后进行清空否则会导致StringBuilder越来越大
+                stringBuilder.delete(0,stringBuilder.length());
+            }else{
+                sResponse(httpExchange,"FAILD");
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -64,57 +77,69 @@ public class workMan implements Runnable {
         BufferedReader br = new BufferedReader(new InputStreamReader(exchange.getRequestBody()));
         String body;
         while (null != (body = br.readLine())) {
-            System.out.println(body);
-            sb.append(body);
+//            System.out.println(body);
+            stringBuilder.append(body);
         }
+        System.out.println(stringBuilder.toString());
+        br.close();
     }
 
     /**
      * 接收到客户端的请求后对客户端及进行响应
      * @param exchange 交换对象 httpServer包内使用这个对象进行和客户端的交互操作
      */
-    private void httpResponse(HttpExchange exchange) {
-//        响应文件
-        File file = null;
-//        响应文件的字节数组长度
-        Long fLength = null;
-//        响应文件的字节内容
-        byte[] fileConnect = null;
-//        响应文件的路径
-        String url;
-        int recode;
+    private void sResponse(HttpExchange exchange,String responseContent){
         try {
-            url = MyHttpHandler.class.getClassLoader().getResource(responseUrl).getPath();
-            file = new File(url);
-            fLength = file.length();
-            fileConnect = new byte[fLength.intValue()];
-        }catch (Exception e){
-            System.out.println("请求地址在上下文中有但是没有响应的html");
-            responseUrl = "http/Exception/404.html";
-            httpResponse(exchange);
-        }
-        FileInputStream fi = null;
-        try {
-//            String requestUrl = exchange.getRequestURI().getPath();
-//            System.out.println(requestUrl);
-            fi = new FileInputStream(file);
-            fi.read(fileConnect);
-            fi.close();
-            exchange.sendResponseHeaders(200, fLength);
+            exchange.sendResponseHeaders(200, responseContent.length());
             OutputStream os = exchange.getResponseBody();
-            os.write(fileConnect);
+            os.write(responseContent.getBytes());
             os.close();
             exchange.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+//    private void httpResponse(HttpExchange exchange) {
+////        响应文件
+//        File file = null;
+////        响应文件的字节数组长度
+//        Long fLength = null;
+////        响应文件的字节内容
+//        byte[] fileConnect = null;
+////        响应文件的路径
+//        String url;
+//        try {
+//            url = Objects.requireNonNull(MyHttpHandler.class.getClassLoader().getResource(responseUrl)).getPath();
+//            file = new File(url);
+//            fLength = file.length();
+//            fileConnect = new byte[fLength.intValue()];
+//        }catch (Exception e){
+//            System.out.println("请求地址在上下文中有但是没有响应的html");
+//            responseUrl = "http/Exception/404.html";
+//            httpResponse(exchange);
+//        }
+//        FileInputStream fi;
+//        try {
+////            String requestUrl = exchange.getRequestURI().getPath();
+////            System.out.println(requestUrl);
+//            assert file != null;
+//            fi = new FileInputStream(file);
+//            assert fileConnect != null;
+//            fi.read(fileConnect);
+//            fi.close();
+//            exchange.sendResponseHeaders(200, fLength);
+//            OutputStream os = exchange.getResponseBody();
+//            os.write(fileConnect);
+//            os.close();
+//            exchange.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     private void sendToKafka(){
         if (producer==null)
             producer = new myProducer();
-        producer.sendMsg(topic,sb);
+        producer.sendMsg(topic,stringBuilder);
     }
 }

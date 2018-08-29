@@ -11,9 +11,9 @@ import java.util.concurrent.BlockingQueue;
  * @create: 2018/08/28 09:43
  **/
 class filePathProducer implements Runnable {
-    BlockingQueue queue;
-    String initPath ;
-    public filePathProducer(BlockingQueue queue, String initPath) {
+    private BlockingQueue queue;
+    private String initPath ;
+    filePathProducer(BlockingQueue queue, String initPath) {
         this.queue = queue;
         this.initPath = initPath;
     }

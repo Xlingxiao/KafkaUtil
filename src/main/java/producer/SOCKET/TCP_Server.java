@@ -15,8 +15,6 @@ public class TCP_Server {
     private int port = 8888;
 //    服务端
     private ServerSocket server;
-//    客户端连接池
-    private int clientPoolNum =20;
 //    创建Socket服务端
     public static void main(String[] args) throws IOException {
         TCP_Server tcp_server = new TCP_Server();
@@ -26,12 +24,16 @@ public class TCP_Server {
     }
 //    启动服务端
     private void start(){
+//        客户端连接池
+        int clientPoolNum = 20;
+//        生产者发送的topic
+        String topic = "webTopic";
         ExecutorService clientPool = Executors.newFixedThreadPool(clientPoolNum);
         Socket client ;
         while (true){
             try {
                 client = server.accept();
-                clientPool.submit(new workMan(client));
+                clientPool.submit(new workMan(client, topic));
             } catch (IOException e) {
                 e.printStackTrace();
             }
