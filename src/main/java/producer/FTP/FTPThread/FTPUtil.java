@@ -126,7 +126,6 @@ public class FTPUtil {
         }
     }
 
-
     /**
      * 根据path获取FTP服务器上的文件内容
      * @param ftpClient FTP对象

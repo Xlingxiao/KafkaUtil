@@ -1,5 +1,8 @@
 package producer.FTP.FTPThread;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -14,21 +17,57 @@ import java.util.concurrent.ArrayBlockingQueue;
  * 被动模式下FTP服务器上指定了一个端口范围超过这个端口范围的一半就会出问题
  */
 public class FTPStart {
-    public static void main(String[] args) {
 //        指定发送的topic
-        String topic = "webTopic";
+    private static String topic;
 //        指定FTP服务器上的文件初始文件夹
-        String initPath = "./code/jupyter/tmp";
+    private static String initPath;
 //        下载文件失败后的重试次数
-        int retries = 3;
+    private static int retries;
+    private static int PathProducerNumber;
+    private static int PathConsumerNumber;
+
+    public static void main(String[] args) {
+        initProperties();
         ArrayBlockingQueue queue = new ArrayBlockingQueue(1000);
         filePathProducer pathProducer = new filePathProducer(queue,initPath);
         filePathConsumer pathConsumer = new filePathConsumer(queue,retries,topic);
-        for (int i =0;i<2;i++){
+        for (int i =0;i<PathProducerNumber;i++){
             new Thread(pathProducer,"生产者-"+i).start();
         }
-        for (int i =0;i<4;i++){
+        for (int i =0;i<PathConsumerNumber;i++){
             new Thread(pathConsumer,"消费者-"+i).start();
         }
+    }
+
+    /**
+     * 初始化程序所需要的配置项
+     */
+    private static void initProperties(){
+        Properties props = new Properties();
+        InputStream is = FTPStart.class.getClassLoader().getResourceAsStream("myInit.properties");
+        try{
+            props.load(is);
+//        指定发送的topic
+            topic = props.getProperty("topic");
+//        指定FTP服务器上的文件初始文件夹
+            initPath = props.getProperty("ftpInitPath");
+//        下载文件失败后的重试次数
+            retries = Integer.parseInt(props.getProperty("ftpFileRetries"));
+            PathProducerNumber = Integer.parseInt(props.getProperty("ftpPathProducerNumber"));
+            PathConsumerNumber = Integer.parseInt(props.getProperty("ftpPathConsumerNumber"));
+        } catch (IOException e) {
+            System.out.println("没有读取到配置文件，将使用默认设置");
+            defaultProperties();
+        } catch (Exception e){
+            System.out.println("读取配置文件内容不匹配，将使用默认设置");
+            defaultProperties();
+        }
+    }
+    private static void defaultProperties(){
+        topic = "webTopic";
+        initPath = "./code/jupyter/tmp";
+        retries = 3;
+        PathProducerNumber = 2;
+        PathConsumerNumber = 4;
     }
 }

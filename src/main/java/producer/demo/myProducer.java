@@ -31,7 +31,7 @@ public class myProducer {
         return new KafkaProducer<>(props);
     }
 
-//    内部类用于保证创建单例的produer
+//    内部类用于保证创建单例的Producer
     private static class broker{
         private static final Producer<String,String> inProducer = new myProducer().createMyProducer();
     }

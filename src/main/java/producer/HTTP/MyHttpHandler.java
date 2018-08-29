@@ -3,9 +3,6 @@ package producer.HTTP;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import java.io.IOException;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,16 +17,13 @@ public class MyHttpHandler implements HttpHandler {
     /**
      * clientConnectPool 客户端连接池
      * queueSize 处理对象集合的个数
-     * workMEN 主要工作对象池
-     * workMan 主要工作对象
      */
-    ExecutorService clientConnectPool;
-    private int queueSize = 20;
-    private BlockingQueue workMEN = new ArrayBlockingQueue(queueSize);
-    private workMan work ;
-
-    MyHttpHandler() {
-        this.clientConnectPool = Executors.newFixedThreadPool(20);
+    private ExecutorService clientConnectPool;
+    private String topic;
+    MyHttpHandler(String topic) {
+        int poolSize = 20;
+        this.clientConnectPool = Executors.newFixedThreadPool(poolSize);
+        this.topic = topic;
     }
 
     /**
@@ -38,7 +32,7 @@ public class MyHttpHandler implements HttpHandler {
      * @param httpExchange httpServer包中使用这个对象和客户端交互
      */
     public void handle(HttpExchange httpExchange){
-        work = new workMan(httpExchange);
+        workMan work = new workMan(httpExchange,topic);
         clientConnectPool.submit(work);
     }
 }

@@ -1,3 +1,4 @@
+#指定http服务器处理的url
 /index.html
 /hello.html
 /success.html

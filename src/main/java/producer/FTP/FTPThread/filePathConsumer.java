@@ -40,7 +40,7 @@ class filePathConsumer implements Runnable {
                 e.printStackTrace();
             }
         }
-//        获取FTPClien对象
+//        获取FTPClient对象
         FTPUtil util = new FTPUtil();
         FTPClient ftpClient = util.getFtpClient();
         if (ftpClient!=null){

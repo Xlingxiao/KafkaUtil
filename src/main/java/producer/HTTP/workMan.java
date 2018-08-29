@@ -30,29 +30,18 @@ public class workMan implements Runnable {
     private myProducer producer ;
 //    kafka Topic
     private String topic = "webTopic" ;
-    workMan(HttpExchange httpExchange) {
+    workMan(HttpExchange httpExchange,String topic) {
         this.httpExchange = httpExchange;
         stringBuilder = new StringBuilder();
-    }
-
-    public int getStatusCode() {
-        return statusCode;
-    }
-
-    public void setStatusCode(int statusCode) {
-        this.statusCode = statusCode;
+        this.topic = topic;
     }
 
     public void setTopic(String topic) {
         this.topic = topic;
     }
 
-    public String getResponseUrl() {
-        return responseUrl;
-    }
-
-    public void setResponseUrl() {
-        if (getStatusCode()!=200){
+    private void setResponseUrl() {
+        if (statusCode!=200){
             responseUrl = "http/Exception/404.html";
         }else
             responseUrl = "http/success"+requestUrl;
@@ -72,7 +61,8 @@ public class workMan implements Runnable {
                 sendToKafka();
             }
 //            使用完StringBuilder之后进行清空否则会导致StringBuilder越来越大
-            stringBuilder.delete(0,stringBuilder.length());
+            if (stringBuilder!=null)
+                stringBuilder.delete(0,stringBuilder.length());
             httpExchange.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -85,12 +75,13 @@ public class workMan implements Runnable {
      * @throws IOException 获取请求内容时可能出现I/O异常
      */
     private void httpRequest(HttpExchange exchange) throws IOException {
-//        获取请求方式、请求URL、设置响应URL
+//        获取请求方式、请求URL、设置响应状态码
         requestMethod = exchange.getRequestMethod();
         requestUrl = exchange.getRequestURI().getPath();
         System.out.printf("请求方式: %s \t请求路径: %s\n", requestMethod, requestUrl);
+//        请求方式为post开始处理
         if (requestMethod.compareToIgnoreCase("post")==0){
-            setStatusCode(200);
+            statusCode = 200;
 //        将请求内容添加进StringBuilder中
             BufferedReader br = new BufferedReader(new InputStreamReader(exchange.getRequestBody()));
             String body;
@@ -100,7 +91,7 @@ public class workMan implements Runnable {
             System.out.println(stringBuilder.toString());
             br.close();
         }else if(requestMethod.compareToIgnoreCase("get")==0){
-            setStatusCode(404);
+            statusCode = 404;
         }
     }
 
@@ -111,19 +102,16 @@ public class workMan implements Runnable {
     private void httpResponse(HttpExchange exchange) {
 //        响应文件
         File file = null;
-//        响应文件的字节数组长度
-        Long fLength = null;
 //        响应文件的字节内容
         byte[] fileConnect = null;
 //        响应文件的路径
         String url;
         try {
-            url = Objects.requireNonNull(MyHttpHandler.class.getClassLoader().getResource(getResponseUrl())).getPath();
+            url = Objects.requireNonNull(MyHttpHandler.class.getClassLoader().getResource(responseUrl)).getPath();
             file = new File(url);
-            fLength = file.length();
-            fileConnect = new byte[fLength.intValue()];
+            fileConnect = new byte[(int) file.length()];
         }catch (Exception e){
-            setStatusCode(404);
+            statusCode =404;
             httpResponse(exchange);
         }
         FileInputStream fi;
@@ -133,7 +121,7 @@ public class workMan implements Runnable {
             assert fileConnect != null;
             fi.read(fileConnect);
             fi.close();
-            exchange.sendResponseHeaders(200, fLength);
+            exchange.sendResponseHeaders(statusCode, fileConnect.length);
             OutputStream os = exchange.getResponseBody();
             os.write(fileConnect);
             os.close();
