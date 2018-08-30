@@ -48,7 +48,7 @@ class filePathConsumer implements Runnable {
             ProcessContent process = new ProcessContent();
 //            发送处理过的文件内容的对象
             myProducer myproducer = new myProducer();
-            StringBuilder sb;
+            StringBuilder stringBuilder;
             while (!queue.isEmpty()){
 //            如果队列是空的不进行下面的操作
                 lock.lock();
@@ -59,14 +59,14 @@ class filePathConsumer implements Runnable {
                 String path = (String) this.queue.poll();
                 lock.unlock();
 //                下载文件内容,指定文件下载失败后的重试次数
-                sb = util.getDownload(ftpClient,path,retries);
-                if (sb==null) continue;
+                stringBuilder = util.getDownload(ftpClient,path,retries);
+                if (stringBuilder==null||stringBuilder.length()<1) continue;
 //                对文件内容进行处理
-                sb = process.startProcess(sb);
+                stringBuilder = process.startProcess(stringBuilder);
 //                查看处理后的文件第一个“，”之前的内容t
-                System.out.println(sb.toString().split(",",2)[0]);
+                System.out.println(stringBuilder.toString().split(",",2)[0]);
 //                发送处理过的内容
-                myproducer.sendMsg(this.topic,sb);
+                myproducer.sendMsg(this.topic,stringBuilder);
 //                循环10次判断队列是否为空，确认为空后返回
                 for (int i = 0; i < 5; i++) {
 //                  如果队列为空等待2秒钟

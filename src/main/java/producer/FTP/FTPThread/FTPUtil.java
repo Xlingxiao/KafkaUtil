@@ -153,9 +153,10 @@ public class FTPUtil {
             }
 //            使用utf-8的编码方式解码文件内容
             br = new BufferedReader(new InputStreamReader(is,"utf-8"));
-            String msg ;
             stringBuilder =new StringBuilder();
+            String msg ;
             while (null!=(msg=br.readLine())){
+                msg = msg.replaceAll("\\s*","");
                 stringBuilder.append(msg);
             }
             br.close();

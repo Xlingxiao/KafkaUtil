@@ -1,29 +1,27 @@
 # KafkaUtil
 kafka 的java基本使用
-1.	单程从ftp服务器获取文件目录
-2.	多线程从FTP服务器获取文件
-3.	对下载的文件进行处理，只有框架（内部没有方法）
-4.	处理过的数据传给kafkaProducer，进行发送
 
-主要结构：
+#FTP方向
+1.使用生产者消费者方式生产者负责从ftp服务器获取文件名，消费者负责根据文件名直接下载文件
 
-1．Controller类负责控制这个程序的运行，内部有两个内部类，getFilePath和consumerFilePath，使用生产者消费者模式运行。
+2.消费者将下载的文件进行解析后交给kafkaProducer，进行发送
+#HTTP方向
+1.使用jdk自带的httpServer包构建
 
-2．getFilePath：生产url，目前只支持一个producer
+2.通过读取配置文件配置http服务部署的端口以及支持阻塞的客户都安数量
 
-3．consumerFilePath() 使用url下载文件并交给processContent处理，处理后的内容交给producer发送
+3.读取contextRout文件指定httpServer接收的请求路径，不再此路径内的请求地址返回404错误
 
-4．processContent 目前里面只有一个空的方法，以后用做处理文件内容用。
+4.获取客户端请求后获取请求方式 请求内容 请求url 如果请求方式不是post方式直接返回404，
+如果请求内容不为空，将请求内容返回给client并将请求内容发送给kafka，
+如果请求内容为空不会将请求内容发送给kafka，
+#Socket方向
+1.读取配置文件配置服务占用的本地端口以及设置客户端连接池的大小
 
-5．FTPUtil：提供FTPClient的相关工具
+2.对客户端发送过来的消息进行接收发送给kafkaProducer
 
-getFtpClient()	获取FTP对象。
+3.对客户端进行响应，响应内容为“SUCCESS”
+    
 
-AllFilePath(FTPClient ftpClient,BlockingQueue queue, String path)	遍历目录添加到队列之中
-
-StringBuilder getDownlod(FTPClient ftpClient,String path)	得到队列中一个文件的内容
-
-endFtp(FTPClient ftpClient)	关闭FTP对象
-
-6.myProducer:
-因为kafka producer后面的版本都是线程安全的了，所以采用单例模式创建producer使用单身模式创建一个KafkaProducer(),在需要使用到它发送消息的时候调用sendMsg()方法就可以了。
+#各个函数功能：
+   在代码内部几乎每句代码是做什么的都有注释，这里就不细说了

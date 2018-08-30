@@ -29,7 +29,7 @@ public class workMan implements Runnable {
 //    kafka producer
     private myProducer producer ;
 //    kafka Topic
-    private String topic = "webTopic" ;
+    private String topic;
     workMan(HttpExchange httpExchange,String topic) {
         this.httpExchange = httpExchange;
         stringBuilder = new StringBuilder();
@@ -55,14 +55,12 @@ public class workMan implements Runnable {
     public void run() {
         try {
             httpRequest(httpExchange);
-            setResponseUrl();
-            httpResponse(httpExchange);
-            if(stringBuilder!=null){
+//            setResponseUrl();
+//            httpResponse(httpExchange);
+            sHttpResponse(httpExchange);
+            if(stringBuilder.length()>0){
                 sendToKafka();
             }
-//            使用完StringBuilder之后进行清空否则会导致StringBuilder越来越大
-            if (stringBuilder!=null)
-                stringBuilder.delete(0,stringBuilder.length());
             httpExchange.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -84,9 +82,10 @@ public class workMan implements Runnable {
             statusCode = 200;
 //        将请求内容添加进StringBuilder中
             BufferedReader br = new BufferedReader(new InputStreamReader(exchange.getRequestBody()));
-            String body;
-            while (null != (body = br.readLine())) {
-                stringBuilder.append(body);
+            String msg;
+            while (null!=(msg=br.readLine())){
+                msg = msg.replaceAll("\\s*","");
+                stringBuilder.append(msg);
             }
             System.out.println(stringBuilder.toString());
             br.close();
@@ -96,8 +95,8 @@ public class workMan implements Runnable {
     }
 
     /**
-     * 接收到客户端的请求后对客户端及进行响应
-     * @param exchange 交换对象 httpServer包内使用这个对象进行和客户端的交互操作
+     * 使用文件对其响应
+     * @param exchange 与客户端主要的数据交换对象
      */
     private void httpResponse(HttpExchange exchange) {
 //        响应文件
@@ -124,6 +123,28 @@ public class workMan implements Runnable {
             exchange.sendResponseHeaders(statusCode, fileConnect.length);
             OutputStream os = exchange.getResponseBody();
             os.write(fileConnect);
+            os.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 接收到客户端的请求后对客户端及进行响应
+     * @param exchange 交换对象 httpServer包内使用这个对象进行和客户端的交互操作
+     */
+    private void sHttpResponse(HttpExchange exchange){
+        String responseContent;
+        if (statusCode==200){
+            responseContent = stringBuilder.toString();
+        }
+        else{
+            responseContent = "<h1>404 Not Found</h1>No context found for request";
+        }
+        try {
+            exchange.sendResponseHeaders(statusCode, responseContent.getBytes().length);
+            OutputStream os = exchange.getResponseBody();
+            os.write(responseContent.getBytes());
             os.close();
         } catch (IOException e) {
             e.printStackTrace();

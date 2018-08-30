@@ -15,7 +15,7 @@ public class workMan implements Runnable{
     private Socket socket;
     private String topic;
     private myProducer producer;
-    private StringBuilder sb = new StringBuilder();
+    private StringBuilder stringBuilder = new StringBuilder();
 
     workMan(Socket socket, String topic) {
 
@@ -27,7 +27,8 @@ public class workMan implements Runnable{
     public void run() {
         try {
             handlerSocket();
-            sendToKafka();
+            if (stringBuilder.length()>0)
+                sendToKafka();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -48,11 +49,12 @@ public class workMan implements Runnable{
         try {
             br = new BufferedReader(
                     new InputStreamReader(socket.getInputStream(), "UTF-8"));
-            String temp;
-            while ((temp = br.readLine()) != null) {
-                sb.append(temp);
+            String msg;
+            while (null!=(msg=br.readLine())){
+                msg = msg.replaceAll("\\s*","");
+                stringBuilder.append(msg);
             }
-            System.out.println(sb.toString());
+            System.out.println(stringBuilder.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -78,6 +80,6 @@ public class workMan implements Runnable{
     private void sendToKafka(){
         if (producer==null)
             producer = new myProducer();
-        producer.sendMsg(topic,sb);
+        producer.sendMsg(topic,stringBuilder);
     }
 }
