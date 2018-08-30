@@ -33,7 +33,7 @@ class filePathConsumer implements Runnable {
     public void run() {
         System.out.printf("消费文件路径者 %s 启动\n",Thread.currentThread().getName());
 //        刚开始时队列为空所有消费者都开始等待
-        while(queue.size()<30){
+        while(queue.size()<5){
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -66,7 +66,7 @@ class filePathConsumer implements Runnable {
 //                查看处理后的文件第一个“，”之前的内容t
                 System.out.println(stringBuilder.toString().split(",",2)[0]);
 //                发送处理过的内容
-                myproducer.sendMsg(this.topic,stringBuilder);
+//                myproducer.sendMsg(this.topic,stringBuilder);
 //                循环10次判断队列是否为空，确认为空后返回
                 for (int i = 0; i < 5; i++) {
 //                  如果队列为空等待2秒钟

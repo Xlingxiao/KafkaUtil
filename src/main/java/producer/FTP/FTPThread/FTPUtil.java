@@ -8,6 +8,7 @@ import org.apache.commons.net.ftp.FTPReply;
 import java.io.*;
 
 import java.net.SocketException;
+import java.text.SimpleDateFormat;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.locks.Lock;
@@ -89,11 +90,11 @@ public class FTPUtil {
                         this.AllFilePath(ftpClient,queue,ftpClient.printWorkingDirectory()+"/"+file.getName());
                     }
                     else if(file.isFile()){
-//                        将文件名由iso-8859-1转为UTF-8
-//                        path = new String(ftpClient.printWorkingDirectory()
-//                                .getBytes("iso-8859-1"),"UTF-8")
-//                                +"/"+file.getName();
+//                        真正的path是文件路径路径加上文件名
                         path = ftpClient.printWorkingDirectory()+"/"+file.getName();
+//                        查看文件最后修改时间
+                        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        System.out.println(format.format(file.getTimestamp().getTime()));
 //                        如果队列中已经包含了这个路径就不再将path加入
                         if (queue.contains(path))
                             continue;
@@ -101,7 +102,6 @@ public class FTPUtil {
                         if (queue.contains(path))
                             continue;
                         queue.put(path);
-//                        System.out.println(new String(path.getBytes("iso-8859-1"),"utf-8"));
                         lock.unlock();
                         if (queue.size()%20==0)
                             System.out.println("目前的队列长度："+queue.size());
@@ -175,7 +175,24 @@ public class FTPUtil {
                             new String(path.getBytes("iso-8859-1"),"utf-8"));
                 }
             }
+        } catch (UnsupportedEncodingException e) {
+            System.out.println("转码异常");
+            e.printStackTrace();
         } catch (IOException e) {
+            System.out.println("文件获取异常");
+            if (retries>0){
+                System.out.printf("开始重试\n");
+                stringBuilder = getDownload(ftpClient,path,retries-1);
+            }
+            else{
+                try {
+                    System.out.printf("文件%s再下载重试次数范围内均下载失败\n",
+                            new String(path.getBytes("iso-8859-1"),"utf-8"));
+                } catch (UnsupportedEncodingException e1) {
+                    System.out.println("转码失败");
+                    e1.printStackTrace();
+                }
+            }
             e.printStackTrace();
         }
         return stringBuilder;
