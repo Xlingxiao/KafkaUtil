@@ -1,6 +1,5 @@
 package producer.FTP.FTPThread;
 
-import javax.script.SimpleScriptContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
@@ -21,8 +20,8 @@ import java.util.concurrent.TimeUnit;
  * 另一个端口用于发送数据给客户端
  * 被动模式下FTP服务器上指定了一个端口范围超过这个端口范围的一半就会出问题
  *
- * 再consumer的地方设置了10s内没有生产到4个文件路径就退出，应该再producer处同样添加超时退出机制
- * 超时关闭线程
+ * 再consumer的地方设置了10s内没有生产到4个文件路径就退出，
+ * 应该在producer处同样添加超时退出机制超时关闭线程
  *
  */
 public class FTPStart implements Runnable{
@@ -73,33 +72,51 @@ public class FTPStart implements Runnable{
         filePathConsumer pathConsumer = new filePathConsumer(queue,retries,topic);
         List<Thread> pList = new ArrayList<>();
         List<Thread> cList = new ArrayList<>();
+        
         for (int i =0;i<PathProducerNumber;i++){
             Thread t = new Thread(pathProducer,"生产者-"+i);
             pList.add(t);
             t.start();
         }
-
-        for (int i =0;i<PathConsumerNumber;i++){
-            Thread t = new Thread(pathConsumer,"消费者-"+i);
-            cList.add(t);
-            t.start();
-        }
-        for (Thread t : pList) {
+        for (int i = 0; i < 8; i++) {
             try {
-                t.join();
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            if (queue.size()>PathConsumerNumber)
+                break;
         }
-        for (Thread t : cList) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        if (queue.size()>PathConsumerNumber){
+            for (int i =0;i<PathConsumerNumber;i++){
+                Thread t = new Thread(pathConsumer,"消费者-"+i);
+                cList.add(t);
+                t.start();
             }
+            for (Thread t : pList) {
+                try {
+                    t.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            for (Thread t : cList) {
+                try {
+                    t.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            lastTime = thisTime;
+            System.out.println("任务执行完成 "+times+" 次 "+format.format(Calendar.getInstance().getTime()));
+        }else {
+            for (Thread pThread :
+                    pList) {
+                pThread.stop();
+            }
+            System.out.println("生产者未能在指定时间内生产文件路径等待下次启动");
         }
-        lastTime = thisTime;
-        System.out.println("任务执行完成 "+times+" 次 "+format.format(Calendar.getInstance().getTime()));
+        
     }
 
     /**
