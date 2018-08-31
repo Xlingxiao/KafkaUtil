@@ -86,12 +86,6 @@ public class FTPUtil {
 //                        查看文件最后修改时间
                         long fileTime = file.getTimestamp().getTimeInMillis()+28800000;
                         if (fileTime>=lastTime&&fileTime<thisTime){
-                            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                            System.out.println(new String(file.getName().getBytes("iso-8859-1"),"utf-8")
-                                    +"\tFileTime: "+ format.format(file.getTimestamp().getTime())
-                                    +"\t程序上次完成时间\t"+format.format(new Date(lastTime))
-                                    +"\t程序本次开始时间\t"+format.format(new Date(thisTime))
-                            );
 //                            真正的path是文件路径路径加上文件名
                             path = ftpClient.printWorkingDirectory()+"/"+file.getName();
 //                            如果队列中已经包含了这个路径就不再将path加入
@@ -101,6 +95,12 @@ public class FTPUtil {
                             if (queue.contains(path))
                                 continue;
                             queue.put(path);
+                            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            System.out.println(new String(file.getName().getBytes("iso-8859-1"),"utf-8")
+                                    +"\tFileTime: "+ format.format(file.getTimestamp().getTime())
+                                    +"\t程序上次完成时间\t"+format.format(new Date(lastTime))
+                                    +"\t程序本次开始时间\t"+format.format(new Date(thisTime))
+                            );
                             lock.unlock();
                             if (queue.size()%20==0)
                                 System.out.println("目前的队列长度："+queue.size());
