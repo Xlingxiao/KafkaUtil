@@ -30,6 +30,7 @@ class Test implements Runnable{
         Calendar calendar = Calendar.getInstance();
         String time = simpleDateFormat.format(calendar.getTime());
         System.out.println(Thread.currentThread().getName() +" " + time);
+        System.out.println(Thread.currentThread().getName() +" " + simpleDateFormat.format(Calendar.getInstance().getTimeInMillis()));
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {

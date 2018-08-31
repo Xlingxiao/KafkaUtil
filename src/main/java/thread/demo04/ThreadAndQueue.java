@@ -13,31 +13,38 @@ import java.util.concurrent.locks.ReentrantLock;
  * 使用sleep()函数扩大出错范围，真实使用不需要sleep()
  */
 public class ThreadAndQueue {
+
+    public static volatile boolean flag = true;
+
     public static void main(String[] args) {
         BlockingQueue queue = new ArrayBlockingQueue(10);
-        Producer producer = new Producer(queue);
-        Consumer consumer = new Consumer(queue);
-        for (int i =0;i<5;i++){
+        Producer producer = new Producer(queue,flag);
+        Consumer consumer = new Consumer(queue,flag);
+        for (int i =0;i<1;i++){
             new Thread(producer,"生产者-"+i).start();
+
 //            new Thread(consumer,"消费者-"+i).start();
         }
-        for (int i =0;i<100;i++){
+        for (int i =0;i<1;i++){
 //            new Thread(producer,"生产者-"+i).start();
             new Thread(consumer,"消费者-"+i).start();
         }
+
     }
 }
 
 class Producer implements Runnable {
     Lock lock = new ReentrantLock();
     BlockingQueue queue ;
+    public static volatile boolean flag = true;
 
-    public Producer(BlockingQueue queue) {
+    public Producer(BlockingQueue queue,boolean flag) {
         this.queue = queue;
+        this.flag = flag;
     }
 
     public void run() {
-        for (int i = 0 ;i<100;i++){
+        for (int i = 0; i < 10; i++) {
             try {
                 if (this.queue.offer(i,10, TimeUnit.SECONDS))
                     System.out.println(Thread.currentThread().getName()+"生产了："+i);
@@ -48,18 +55,21 @@ class Producer implements Runnable {
                 e.printStackTrace();
             }
         }
+        flag = false;
     }
 }
 
 class Consumer implements Runnable {
+    public static volatile boolean flag = true;
     BlockingQueue queue;
     Lock lock = new ReentrantLock();
-    public Consumer(BlockingQueue queue) {
+    public Consumer(BlockingQueue queue,boolean flag) {
         this.queue = queue;
+        this.flag = flag;
     }
 
     public void run() {
-        for (int i = 0 ;i<100;i++){
+        while (flag){
             try {
                 Thread.sleep(100);
                 lock.lock();

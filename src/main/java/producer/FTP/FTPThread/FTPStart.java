@@ -3,6 +3,7 @@ package producer.FTP.FTPThread;
 import javax.script.SimpleScriptContext;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -20,8 +21,9 @@ import java.util.concurrent.TimeUnit;
  * 另一个端口用于发送数据给客户端
  * 被动模式下FTP服务器上指定了一个端口范围超过这个端口范围的一半就会出问题
  *
- * 测试定时任务时修改了初始时消费者等待队列中对象数量的值
- * 目前还应该设置两个时间变量控制不重复读取同一文件
+ * 再consumer的地方设置了10s内没有生产到4个文件路径就退出，应该再producer处同样添加超时退出机制
+ * 超时关闭线程
+ *
  */
 public class FTPStart implements Runnable{
 //        指定发送的topic
@@ -35,20 +37,16 @@ public class FTPStart implements Runnable{
     private static int PathConsumerNumber;
 //    测试时定时任务的次数
     private int times = 0;
+//    程序上次执行完成时间
+    private long lastTime;
+//    程序本次执行开始时间
+    private long thisTime;
+
     public static void main(String[] args) {
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
         FTPStart ftpStart = new FTPStart();
-        executor.scheduleWithFixedDelay(ftpStart,0,10, TimeUnit.SECONDS);
-        while (ftpStart.times<50){
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        executor.shutdown();
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
-        System.out.println(format.format(Calendar.getInstance().getTime()));
+        ftpStart.lastTime = 0;
+        executor.scheduleWithFixedDelay(ftpStart,0,60, TimeUnit.SECONDS);
     }
 
     /**
@@ -56,11 +54,22 @@ public class FTPStart implements Runnable{
      */
     @Override
     public void run() {
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
-        System.out.println("任务开始\t"+format.format(Calendar.getInstance().getTime())+"\t"+times++);
+        Calendar nowTime = Calendar.getInstance();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        SimpleDateFormat format2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String thisTimeString = format.format(nowTime.getTime());
+        try {
+            Date newDate = format.parse(thisTimeString);
+            thisTime = newDate.getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        System.out.println("任务开始\t"+"\t"+times++);
+        System.out.println("lastTime "+format2.format(new Date(lastTime)));
+        System.out.println("thisTime "+format2.format(new Date(thisTime)));
         initProperties();
         ArrayBlockingQueue queue = new ArrayBlockingQueue(1000);
-        filePathProducer pathProducer = new filePathProducer(queue,initPath);
+        filePathProducer pathProducer = new filePathProducer(queue,initPath,lastTime,thisTime);
         filePathConsumer pathConsumer = new filePathConsumer(queue,retries,topic);
         List<Thread> pList = new ArrayList<>();
         List<Thread> cList = new ArrayList<>();
@@ -69,27 +78,27 @@ public class FTPStart implements Runnable{
             pList.add(t);
             t.start();
         }
+
         for (int i =0;i<PathConsumerNumber;i++){
             Thread t = new Thread(pathConsumer,"消费者-"+i);
             cList.add(t);
             t.start();
         }
-        for (Thread t :
-                pList) {
+        for (Thread t : pList) {
             try {
                 t.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        for (Thread t :
-                cList) {
+        for (Thread t : cList) {
             try {
                 t.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
+        lastTime = thisTime;
         System.out.println("任务执行完成 "+times+" 次 "+format.format(Calendar.getInstance().getTime()));
     }
 

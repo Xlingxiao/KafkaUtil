@@ -9,6 +9,7 @@ import java.io.*;
 
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.locks.Lock;
@@ -17,10 +18,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class FTPUtil {
 
+    private Properties props = new Properties();
+
 //    获取FTP对象
     public FTPClient getFtpClient() {
 //        读取配置文件
-        Properties props = new Properties();
+        props = new Properties();
         InputStream is = FTPUtil.class.getClassLoader().getResourceAsStream("FTP.properties");
         try {
             props.load(is);
@@ -67,44 +70,41 @@ public class FTPUtil {
      *@创建人  Ling
      *@创建时间  2018/8/28
      */
-    public void AllFilePath(FTPClient ftpClient,BlockingQueue queue, String path){
+    public void AllFilePath(FTPClient ftpClient,BlockingQueue queue, String path,long lastTime,long thisTime){
         Lock lock = new ReentrantLock();
         try {
-//            FTP协议默认只支持iso-8859-1的编码格式，
-//            这里我们转换中文文件名为字节形式
-//            将字节形式转为iso-8859-1的编码
-//            path = new String(path.getBytes("UTF-8"),"iso-8859-1");
-//            判断改变工作路径是否成功
             boolean ff = ftpClient.changeWorkingDirectory(path);
             if(ff){
                 FTPFile[] fs = ftpClient.listFiles();
 //                遍历文件,下面两行可以选择遍历的深度和次数
                 for(FTPFile file:fs){
-//                for(int i = 0; i<20;i++){
-//                    如果文件夹中没有指定的文件数量就不再遍历下去
-//                    if (fs.length<=i)
-//                        break;
-//                    FTPFile file = fs[i];
-//                    如果判断文件为文件夹递归调用这个函数
                     if (file.isDirectory()){
-                        this.AllFilePath(ftpClient,queue,ftpClient.printWorkingDirectory()+"/"+file.getName());
+                        this.AllFilePath(ftpClient,queue,ftpClient.printWorkingDirectory()+"/"+file.getName(),
+                        lastTime,thisTime);
                     }
                     else if(file.isFile()){
-//                        真正的path是文件路径路径加上文件名
-                        path = ftpClient.printWorkingDirectory()+"/"+file.getName();
 //                        查看文件最后修改时间
-                        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        System.out.println(format.format(file.getTimestamp().getTime()));
-//                        如果队列中已经包含了这个路径就不再将path加入
-                        if (queue.contains(path))
-                            continue;
-                        lock.lock();
-                        if (queue.contains(path))
-                            continue;
-                        queue.put(path);
-                        lock.unlock();
-                        if (queue.size()%20==0)
-                            System.out.println("目前的队列长度："+queue.size());
+                        long fileTime = file.getTimestamp().getTimeInMillis()+28800000;
+                        if (fileTime>=lastTime&&fileTime<thisTime){
+                            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            System.out.println(new String(file.getName().getBytes("iso-8859-1"),"utf-8")
+                                    +"\tFileTime: "+ format.format(file.getTimestamp().getTime())
+                                    +"\t程序上次完成时间\t"+format.format(new Date(lastTime))
+                                    +"\t程序本次开始时间\t"+format.format(new Date(thisTime))
+                            );
+//                            真正的path是文件路径路径加上文件名
+                            path = ftpClient.printWorkingDirectory()+"/"+file.getName();
+//                            如果队列中已经包含了这个路径就不再将path加入
+                            if (queue.contains(path))
+                                continue;
+                            lock.lock();
+                            if (queue.contains(path))
+                                continue;
+                            queue.put(path);
+                            lock.unlock();
+                            if (queue.size()%20==0)
+                                System.out.println("目前的队列长度："+queue.size());
+                        }
                     }
                 }
 //                遍历一个目录之后退出
@@ -137,20 +137,8 @@ public class FTPUtil {
         BufferedReader br;
         StringBuilder stringBuilder =null;
         try {
-//            打印文件绝对路径
-//            System.out.println(path);
-//            将文件路径转码
-//            path = new String(path.getBytes("UTF-8"),"iso-8859-1");
 //            获取文件输入流
             InputStream is = ftpClient.retrieveFileStream(path);
-//            通过文件的绝对路径没有获取到输入流
-//            （文件之前存在之后被删除了）
-//            获取到的StringBuilder就为空
-            if(null==is){
-                System.out.printf("获取资源输入流出错！%s\n",
-                        new String(path.getBytes("iso-8859-1"),"utf-8"));
-                return null;
-            }
 //            使用utf-8的编码方式解码文件内容
             br = new BufferedReader(new InputStreamReader(is,"utf-8"));
             stringBuilder =new StringBuilder();
@@ -167,7 +155,7 @@ public class FTPUtil {
             if (!ftpClient.completePendingCommand()){
 //            如果传输失败重试retries次
                 if (retries>0){
-//                    path = new String(path.getBytes("iso-8859-1"),"UTF-8");
+                    System.out.printf("重试第%d次\n",Integer.valueOf(props.getProperty("ftpFileRetries"))-retries+1);
                     stringBuilder = getDownload(ftpClient,path,retries-1);
                 }
                 else{
@@ -178,10 +166,10 @@ public class FTPUtil {
         } catch (UnsupportedEncodingException e) {
             System.out.println("转码异常");
             e.printStackTrace();
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("文件获取异常");
             if (retries>0){
-                System.out.printf("开始重试\n");
+                System.out.printf("重试第%d次\n",Integer.valueOf(props.getProperty("ftpFileRetries"))-retries+1);
                 stringBuilder = getDownload(ftpClient,path,retries-1);
             }
             else{
@@ -190,10 +178,9 @@ public class FTPUtil {
                             new String(path.getBytes("iso-8859-1"),"utf-8"));
                 } catch (UnsupportedEncodingException e1) {
                     System.out.println("转码失败");
-                    e1.printStackTrace();
+//                    e1.printStackTrace();
                 }
             }
-            e.printStackTrace();
         }
         return stringBuilder;
     }
@@ -201,7 +188,8 @@ public class FTPUtil {
 //    关闭FTP对象
     public void endFtp(FTPClient ftpClient,String name){
         try {
-            ftpClient.disconnect();
+            if (ftpClient!=null&&ftpClient.isConnected())
+                ftpClient.disconnect();
             System.out.println(name+":关闭与FTP服务器的连接");
         } catch (IOException e) {
             e.printStackTrace();
