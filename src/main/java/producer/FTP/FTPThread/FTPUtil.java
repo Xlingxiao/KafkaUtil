@@ -92,8 +92,10 @@ public class FTPUtil {
                             if (queue.contains(path))
                                 continue;
                             lock.lock();
-                            if (queue.contains(path))
+                            if (queue.contains(path)){
+                                lock.unlock();
                                 continue;
+                            }
                             queue.put(path);
                             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                             System.out.println(new String(file.getName().getBytes("iso-8859-1"),"utf-8")

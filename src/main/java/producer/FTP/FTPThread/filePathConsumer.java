@@ -25,18 +25,20 @@ class filePathConsumer implements Runnable {
     private BlockingQueue queue;
     private String topic;
     private Lock lock = new ReentrantLock();
+    private int pathConsumerNumber;
 
-    filePathConsumer(BlockingQueue queue,int retries, String topic) {
+    filePathConsumer(BlockingQueue queue, int retries, String topic, int pathConsumerNumber) {
         this.queue = queue;
         this.retries = retries;
         this.topic = topic;
+        this.pathConsumerNumber = pathConsumerNumber;
     }
 
     public void run() {
 //        System.out.printf("消费文件路径者 %s 启动\n",Thread.currentThread().getName());
 //        刚开始时队列为空所有消费者都开始等待,至少等到队列中的对象数量等于consumer线程数再开始工作
         for (int i = 0; i < 10; i++) {
-            if(queue.size()<4){
+            if(queue.size()<pathConsumerNumber){
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {

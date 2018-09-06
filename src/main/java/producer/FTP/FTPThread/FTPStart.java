@@ -69,7 +69,7 @@ public class FTPStart implements Runnable{
         initProperties();
         ArrayBlockingQueue queue = new ArrayBlockingQueue(1000);
         filePathProducer pathProducer = new filePathProducer(queue,initPath,lastTime,thisTime);
-        filePathConsumer pathConsumer = new filePathConsumer(queue,retries,topic);
+        filePathConsumer pathConsumer = new filePathConsumer(queue,retries,topic,PathConsumerNumber);
         List<Thread> pList = new ArrayList<>();
         List<Thread> cList = new ArrayList<>();
         
