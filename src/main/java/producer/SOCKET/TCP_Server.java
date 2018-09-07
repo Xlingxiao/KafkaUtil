@@ -25,7 +25,7 @@ public class TCP_Server {
     public static void main(String[] args) throws IOException {
         initProperties();
         server = new ServerSocket(port);
-        System.out.printf("Socket 服务端已经启动，占用本地端口：%d",server.getLocalPort());
+        System.out.printf("Socket 服务端已经启动，占用本地端口：%d\n",server.getLocalPort());
         start();
     }
 //    启动服务端
@@ -41,6 +41,7 @@ public class TCP_Server {
             }
         }
     }
+
     private static void initProperties(){
         Properties props = new Properties();
         InputStream is = TCP_Server.class.getClassLoader().getResourceAsStream("myInit.properties");
@@ -57,6 +58,7 @@ public class TCP_Server {
             defaultProperties();
         }
     }
+
     private static void defaultProperties(){
         port = 8888;
         clientPoolNum = 20;

@@ -25,26 +25,45 @@ public class workMan implements Runnable{
 
     @Override
     public void run() {
+        handlerSocket();
+        if (stringBuilder.length()>0)
+//            sendToKafka();
+
         try {
-            handlerSocket();
-            if (stringBuilder.length()>0)
-                sendToKafka();
-        } catch (Exception e) {
+            socket.close();
+        } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
-    private void handlerSocket() throws Exception {
-        clientRequest();
-        response();
-        socket.close();
+    private void handlerSocket()  {
+        BufferedReader br ;
+        try {
+            br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            String msg;
+            while (!(msg=br.readLine()).equals("GoodBye")){
+                if (msg.equals("end")) {
+                    System.out.println(stringBuilder.toString());
+                    Writer writer = new OutputStreamWriter(socket.getOutputStream());
+                    writer.write("SUCCESS\n");
+                    writer.flush();
+                }else{
+                    msg = msg.replaceAll("\\s*","");
+                    stringBuilder.append(msg);
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
      * 获取客户端发送过来的数据
      */
     private void clientRequest(){
-        // 跟客户端建立好连接之后，我们就可以获取socket的InputStream，并从中读取客户端发过来的信息了
+//       跟客户端建立好连接之后，我们就可以获取socket的InputStream，并从中读取客户端发过来的信息了
         BufferedReader br;
         try {
             br = new BufferedReader(
