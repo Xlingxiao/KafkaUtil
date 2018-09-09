@@ -18,7 +18,7 @@ public class T {
     public static void main(String[] args) {
         List<Thread> threadList = new ArrayList<Thread>();
         myThread thread =  new myThread();
-        int countThread = 500;
+        int countThread = 2;
         for(int i =0;i<countThread;i++){
             Thread t = new Thread(thread);
             threadList.add(t);

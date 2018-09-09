@@ -2,6 +2,7 @@ package producer.SOCKET;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 
 import producer.demo.myProducer;
 
@@ -13,6 +14,7 @@ import producer.demo.myProducer;
 public class workMan implements Runnable{
     
     private Socket socket;
+    private volatile boolean flag;
     private String topic;
     private myProducer producer;
     private StringBuilder stringBuilder = new StringBuilder();
@@ -23,75 +25,56 @@ public class workMan implements Runnable{
         this.topic = topic;
     }
 
+    /**
+     *@描述 连接保持不断，client发送的消息数量大于一定值时发送给kafka
+     *      清空stringBuilder
+     *      目前设计应该是定时2-3s接收客户端的心跳，记录上次心跳的时间；
+     *      没有心跳之后关闭与客户端的连接
+     *      等待一天后没有客户端的消息发过来就断掉连接
+     *@参数  []
+     *@返回值  void
+     *@创建人  Lingxiao
+     *@创建时间  2018/9/9
+     */
     @Override
     public void run() {
-        handlerSocket();
-        if (stringBuilder.length()>0)
-//            sendToKafka();
-
         try {
-            socket.close();
-        } catch (IOException e) {
+            socket.setSoTimeout(200);
+        } catch (SocketException e) {
             e.printStackTrace();
         }
-
-    }
-
-    private void handlerSocket()  {
         BufferedReader br ;
         try {
             br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String msg;
-            while (!(msg=br.readLine()).equals("GoodBye")){
-                if (msg.equals("end")) {
+            while (!(msg=br.readLine()).equals("Goodbye")){
+                if (msg.equals("Goodbye"))
+                    break;
+                else if(msg.equals("heartbeat"))
+                    continue;
+
+//                msg = msg.replaceAll("\\s*","");
+                stringBuilder.append(msg);
+//                获取到的内容差不多了进行处理或者直接发送给kafka
+                if (stringBuilder.length()>=20) {
                     System.out.println(stringBuilder.toString());
-                    Writer writer = new OutputStreamWriter(socket.getOutputStream());
-                    writer.write("SUCCESS\n");
-                    writer.flush();
-                }else{
-                    msg = msg.replaceAll("\\s*","");
-                    stringBuilder.append(msg);
+//                    sendToKafka();
+                    stringBuilder.delete(0,stringBuilder.length());
                 }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
 
-    /**
-     * 获取客户端发送过来的数据
-     */
-    private void clientRequest(){
-//       跟客户端建立好连接之后，我们就可以获取socket的InputStream，并从中读取客户端发过来的信息了
-        BufferedReader br;
         try {
-            br = new BufferedReader(
-                    new InputStreamReader(socket.getInputStream(), "UTF-8"));
-            String msg;
-            while (null!=(msg=br.readLine())){
-                msg = msg.replaceAll("\\s*","");
-                stringBuilder.append(msg);
-            }
-            System.out.println(stringBuilder.toString());
+            if(!socket.isClosed())
+                socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
-    /**
-     * 收到数据后对客户端进行响应
-     */
-    private void response(){
-        try {
-            Writer writer = new OutputStreamWriter(socket.getOutputStream());
-            writer.write("SUCCESS");
-            writer.flush();
-//            socket.shutdownOutput();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * 将消息丢给producer
