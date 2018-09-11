@@ -43,21 +43,21 @@ public class heartbeatDog implements Runnable{
         try {
 
             br = new BufferedReader(new InputStreamReader(heart.getInputStream()));
-            String heartContent;
+//            String heartContent;
             while (flag){
 
-                heartContent = br.readLine();
-                System.out.println("心跳：  " + heartContent);
+                br.readLine();
+//                System.out.println("心跳：  " + heartContent);
             }
 //        捕获异常优先级顺序为 超时异常 》 Socket异常 》 I/O异常
         } catch (SocketTimeoutException e){
 //            获取心跳时间出现异常将flag设置为false，结束这个客户端
             setFlag();
-            System.out.println("关闭客户端");
+            System.out.printf("心跳服务器 %s 关闭客户端\n",Thread.currentThread().getName());
 
         } catch (SocketException e){
 //            获取心跳时间出现异常将flag设置为false，结束这个客户端
-            System.out.println("客户端主动关闭连接");
+            System.out.printf("客户端 %s 主动关闭连接\n",heart.getInetAddress());
             setFlag();
 
         } catch (IOException e) {
@@ -70,7 +70,7 @@ public class heartbeatDog implements Runnable{
                 if (!heart.isClosed()){
                     br.close();
                     heart.close();
-                    System.out.println("关闭心跳服务");
+                    System.out.printf("%s 关闭心跳服务\n",Thread.currentThread().getName());
                 }
             } catch (IOException e) {
                 e.printStackTrace();

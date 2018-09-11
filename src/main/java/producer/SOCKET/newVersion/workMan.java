@@ -42,7 +42,7 @@ public class workMan implements Runnable{
      * 3.客户端客户端死掉就不接收消息
      *   但现在有一个问题，客户端死掉之后
      *   在读取的这边本身就会报异常，似乎
-     *   没有必要弄这个心跳机制
+     *   没有必要弄这个心跳机制,
      */
     @Override
     public void run() {
@@ -53,13 +53,13 @@ public class workMan implements Runnable{
             br = new BufferedReader(new InputStreamReader(is));
             String msg;
 //            根据心跳标志判断客户端是否活着
-            while (heartbeat.isFlag()){
+            while (heartbeat.isFlag()||is.available()>0){
 //                如果客户端有消息过来正常处理
                 if (is.available()>0){
                     msg = br.readLine();
                     stringBuilder.append(msg);
 //                获取到的内容差不多了进行处理或者直接发送给kafka
-                    if (stringBuilder.length()>=1000) {
+                    if (stringBuilder.length()>=10) {
                         System.out.println(stringBuilder.toString());
                         sendToKafka();
                         stringBuilder.delete(0,stringBuilder.length());
@@ -69,9 +69,9 @@ public class workMan implements Runnable{
                     Thread.sleep(2000);
                 }
             }
-            System.out.println("检测不到客户端心跳准备断开连接");
+            System.out.printf("%s 检测不到客户端心跳准备断开连接\n",Thread.currentThread().getName());
         } catch (SocketException e){
-            System.out.println("客户端主动断开连接");
+            System.out.printf("客户端 %s 主动断开连接\n",socket.getInetAddress());
 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -80,7 +80,7 @@ public class workMan implements Runnable{
             try {
                 if(!socket.isClosed()){
                     socket.close();
-                    System.out.println("关闭与客户端连接");
+                    System.out.printf("%s 关闭与客户端连接\n",Thread.currentThread().getName());
                 }
             } catch (IOException e) {
                 e.printStackTrace();

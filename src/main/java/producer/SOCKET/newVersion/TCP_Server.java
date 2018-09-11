@@ -11,6 +11,7 @@ import java.util.concurrent.Executors;
 /**
  * @program: KafkaUtil
  * @description: 使用两个服务器端口，一个用于检测心跳另一个用于接收消息
+ * 使用两个服务端端口优点是互不干扰，缺点是可能导致服务器性能降低
  * @author: Ling
  * @create: 2018/09/10 10:20
  **/
@@ -59,7 +60,7 @@ public class TCP_Server {
 //                开始工作
                 clientPool.submit(work);
                 heartbeatClients.submit(heart);
-                System.out.println("已有客户端连接");
+                System.out.printf("已有客户端连接\t%s:%s\n",client.getInetAddress(),client.getPort());
             } catch (IOException e) {
                 e.printStackTrace();
             }
