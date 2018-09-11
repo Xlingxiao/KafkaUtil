@@ -1,4 +1,4 @@
-package Consumer.demo_03;
+package Consumer.demo04;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -14,12 +14,11 @@ import java.util.Properties;
 
 /**
  * @program: KafkaUtil
- * @description: 单独的consumer通过设置不同的partition获取数据相互不影响
+ * @description: 获取kafka服务器消息的对象
  * @author: Ling
- * @create: 2018/08/26 15:17
+ * @create: 2018/09/11 17:47
  **/
-public class myConsumer implements Runnable {
-
+public class MyWorker implements Runnable{
     /**
      * id 每个消费者线程的id
      * topic 消费者消费的topic
@@ -30,13 +29,12 @@ public class myConsumer implements Runnable {
     int partition;
     private KafkaConsumer<String,String> consumer;
 
-    public myConsumer(int id ,String topic, int partition) {
+    public MyWorker(int id ,String topic, int partition) {
         this.id = id;
         this.partition = partition;
         this.topic = topic;
     }
 
-    @Override
     public void run() {
         createConsumer();
         startReceive();
@@ -46,7 +44,7 @@ public class myConsumer implements Runnable {
     private void createConsumer(){
 //        获取配置文件
         Properties props = new Properties();
-        InputStream is = myConsumer.class.getClassLoader().getResourceAsStream("consumer.properties");
+        InputStream is = MyWorker.class.getClassLoader().getResourceAsStream("consumer.properties");
         try {
             props.load(new InputStreamReader(is));
         } catch (IOException e) {
@@ -59,7 +57,7 @@ public class myConsumer implements Runnable {
         consumer.assign(Arrays.asList(new TopicPartition(topic,partition)));
     }
 
-//        开始消费
+    //        开始消费
     private void startReceive(){
 //        声明records对象,kafka的消息使用这个对象进行读取
         ConsumerRecords<String,String> records;
