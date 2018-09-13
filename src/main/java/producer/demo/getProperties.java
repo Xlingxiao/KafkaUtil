@@ -11,7 +11,7 @@ import java.util.Properties;
 public class getProperties {
     public static void main(String[] args) throws IOException {
         Properties props = new Properties();
-        InputStream is = getProperties.class.getClassLoader().getResourceAsStream("producer.properties");
+        InputStream is = getProperties.class.getClassLoader().getResourceAsStream("kafka/producer.properties");
         props.load(is);
         is.close();
         System.out.println(props.toString());

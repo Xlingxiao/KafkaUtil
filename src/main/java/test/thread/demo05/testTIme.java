@@ -1,4 +1,4 @@
-package thread.demo05;/**
+package test.thread.demo05;/**
  * @创建人
  * @创建时间
  * @描述

@@ -46,7 +46,7 @@ public class myConsumer implements Runnable {
     private void createConsumer(){
 //        获取配置文件
         Properties props = new Properties();
-        InputStream is = myConsumer.class.getClassLoader().getResourceAsStream("consumer.properties");
+        InputStream is = myConsumer.class.getClassLoader().getResourceAsStream("kafka/consumer.properties");
         try {
             props.load(new InputStreamReader(is));
         } catch (IOException e) {

@@ -1,9 +1,8 @@
 package producer.FTP.FTPThread;
 
 import org.apache.commons.net.ftp.FTPClient;
-import producer.demo.myProducer;
+import common.myProducer;
 
-import java.util.Calendar;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;

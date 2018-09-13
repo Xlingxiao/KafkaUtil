@@ -4,7 +4,7 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 
-import producer.demo.myProducer;
+import common.myProducer;
 
 /** 
 * @Description: 主要工作对象，在这里设置发送到kafka的topic

@@ -1,4 +1,4 @@
-package thread.demo05;
+package test.thread.demo05;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

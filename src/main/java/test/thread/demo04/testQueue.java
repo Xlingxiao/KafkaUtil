@@ -1,4 +1,4 @@
-package thread.demo04;
+package test.thread.demo04;
 
 import java.util.LinkedList;
 import java.util.Queue;

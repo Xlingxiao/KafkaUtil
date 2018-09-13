@@ -1,4 +1,4 @@
-package thread.demo02;
+package test.thread.demo02;
 
 /**
  * @创建人

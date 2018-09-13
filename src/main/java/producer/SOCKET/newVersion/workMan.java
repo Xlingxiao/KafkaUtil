@@ -1,6 +1,6 @@
 package producer.SOCKET.newVersion;
 
-import producer.demo.myProducer;
+import common.myProducer;
 
 import java.io.BufferedReader;
 import java.io.IOException;

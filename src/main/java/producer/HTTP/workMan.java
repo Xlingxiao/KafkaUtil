@@ -1,7 +1,7 @@
 package producer.HTTP;
 
 import com.sun.net.httpserver.HttpExchange;
-import producer.demo.myProducer;
+import common.myProducer;
 
 import java.io.*;
 import java.util.Objects;

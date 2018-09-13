@@ -1,4 +1,4 @@
-package thread.demo01;
+package test.thread.demo01;
 
 /**
  *@功能

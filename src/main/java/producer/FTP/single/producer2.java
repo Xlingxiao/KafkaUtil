@@ -18,7 +18,7 @@ public class producer2 {
     private Producer<String,String> createProducer() {
         System.out.println("==============");
         Properties props = new Properties();
-        InputStream is = producer2.class.getClassLoader().getResourceAsStream("producer.properties");
+        InputStream is = producer2.class.getClassLoader().getResourceAsStream("kafka/producer.properties");
         try {
             props.load(is);
             is.close();
