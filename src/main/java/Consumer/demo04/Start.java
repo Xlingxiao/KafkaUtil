@@ -25,7 +25,9 @@ public class Start {
 
     public static void main(String[] args){
 //        初始化指定的topic并设置相应topic的Partition Number
-        initProperties();
+        if (! initProperties()){
+            return;
+        }
 //        启动每个线程
         List<Thread> consumers = new ArrayList<>();
 //        根据分区的数量创建consumer的线程数保证一个分区一个consumer
@@ -39,7 +41,8 @@ public class Start {
     }
 
 //    初始化服务器配置
-    private static void initProperties(){
+    private static boolean initProperties(){
+        boolean flag = false;
         Properties props = new Properties();
         InputStream is = Start.class.getClassLoader().getResourceAsStream("myInit.properties");
         try {
@@ -50,8 +53,10 @@ public class Start {
             partitionsNumber = tmpConsumer.partitionsFor(topic).size();
             System.out.printf("topic %s 下有 %d 个分区\n",topic,partitionsNumber);
             tmpConsumer.close();
+            flag = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return flag;
     }
 }

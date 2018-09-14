@@ -78,17 +78,10 @@ public class TCP_Server {
             topic = props.getProperty("topic");
         } catch (IOException e) {
             System.out.println("读取配置文件失败，将使用默认设置启动服务");
-            defaultProperties();
+            e.printStackTrace();
         } catch (Exception e){
             System.out.println("读取配置文件内容有误，将使用默认设置启动服务");
-            defaultProperties();
+            e.printStackTrace();
         }
-    }
-
-//    默认服务器配置
-    private static void defaultProperties(){
-        port = 8888;
-        clientPoolNum = 20;
-        topic = "webTopic";
     }
 }

@@ -94,6 +94,14 @@ public class MyWorker implements Runnable{
                          *  3，直接不管&不提交，等待下次启动消费者时自动获取
                          */
                         System.out.println("数据插入ES失败");
+                        for (int i = 0; i < 3; i++) {
+                            try {
+                                esUtil.insertOneData(Index, Type, msg);
+                                break;
+                            } catch (ElasticsearchException me) {
+                            }
+                        }
+                        System.out.println("重试三次后仍无法插入");
                     }
                 }
             }

@@ -31,7 +31,7 @@ public class myProducer {
         return new KafkaProducer<>(props);
     }
 
-//    内部类用于保证创建单例的Producer
+    //    内部类用于保证创建单例的Producer
     private static class broker{
         private static final Producer<String,String> inProducer = new myProducer().createMyProducer();
     }
@@ -49,6 +49,15 @@ public class myProducer {
      */
     public void sendMsg(String topic, StringBuilder sb){
         ProducerRecord<String, String> msg = new ProducerRecord<>(topic, sb.toString());
+        try {
+            broker.inProducer.send(msg);
+        }catch (IllegalStateException e){
+            System.out.println("producer对象已经关闭");
+        }
+    }
+
+    public void sendMsg(String topic, String str){
+        ProducerRecord<String, String> msg = new ProducerRecord<>(topic, str);
         try {
             broker.inProducer.send(msg);
         }catch (IllegalStateException e){

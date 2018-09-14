@@ -1,9 +1,15 @@
 package producer.FTP.FTPThread;
 
 import common.FTPUtil;
-import org.apache.commons.net.ftp.FTPClient;
 import common.myProducer;
+import org.apache.commons.net.ftp.FTPClient;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -26,12 +32,14 @@ class filePathConsumer implements Runnable {
     private String topic;
     private Lock lock = new ReentrantLock();
     private int pathConsumerNumber;
+    private List<String> fileAttributes;
 
     filePathConsumer(BlockingQueue queue, int retries, String topic, int pathConsumerNumber) {
         this.queue = queue;
         this.retries = retries;
         this.topic = topic;
         this.pathConsumerNumber = pathConsumerNumber;
+        initConfig();
     }
 
     public void run() {
@@ -65,11 +73,16 @@ class filePathConsumer implements Runnable {
                 lock.unlock();
 //                下载文件内容,指定文件下载失败后的重试次数
                 stringBuilder = util.getDownload(ftpClient,path,retries);
+
                 if (stringBuilder==null||stringBuilder.length()<1) continue;
-//                查看处理后的文件第一个“，”之前的内容t
-                System.out.println(stringBuilder.toString().split(",",2)[0]);
+
+//                查看文件第一行
+                System.out.println(stringBuilder.toString().split("\n",2)[0]);
+                String[] strList = processFile(stringBuilder);
+                for (String str : strList) {
 //                发送处理过的内容
-                myproducer.sendMsg(this.topic,stringBuilder);
+                    myproducer.sendMsg(this.topic,str);
+                }
 //                循环10次判断队列是否为空，确认为空后返回
                 for (int i = 0; i < 5; i++) {
 //                  如果队列为空等待2秒钟
@@ -83,9 +96,63 @@ class filePathConsumer implements Runnable {
                 }
             }
 //            关闭FTP连接
-            util.endFtp(ftpClient,Thread.currentThread().getName());
+            util.endFtp(ftpClient, Thread.currentThread().getName());
         }
         else System.out.println("退出");
         System.out.println(Thread.currentThread().getName()+"处理结束---------");
+    }
+
+    /**
+     * 处理FTP文件内容改为json数据
+     */
+    private String[] processFile(StringBuilder stringBuilder){
+        StringBuilder tmpBuilder = new StringBuilder();
+        String [] strings = stringBuilder.toString().split("\n");
+        for (int i = 0; i < strings.length; i++) {
+            String[] oneMsg = strings[i].split("\t");
+            try {
+                tmpBuilder.append("{");
+                for (int j = 0; j < fileAttributes.size(); j++) {
+                    tmpBuilder.append("\"");
+                    tmpBuilder.append(fileAttributes.get(j));
+                    tmpBuilder.append("\"");
+
+                    tmpBuilder.append(":");
+
+                    tmpBuilder.append("\"");
+                    tmpBuilder.append(oneMsg[j]);
+                    tmpBuilder.append("\",");
+                }
+                tmpBuilder.delete(tmpBuilder.length()-1,tmpBuilder.length());
+                tmpBuilder.append("}");
+            } catch (IndexOutOfBoundsException e){
+                System.out.println("指定的文件解析字段超过了文件中真实字段，本条数据放弃处理");
+                System.out.println(tmpBuilder.toString());
+                continue;
+            }finally {
+                strings[i] = tmpBuilder.toString();
+                tmpBuilder.delete(0,tmpBuilder.length());
+            }
+        }
+        return strings;
+    }
+
+    private void initConfig() {
+//        获取上下文文件
+        InputStream is = filePathConsumer.class.getClassLoader().getResourceAsStream("FTP/fileField");
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String content;
+        fileAttributes = new LinkedList<>();
+//        将文件加入到contexts中
+        try {
+            while (null != (content = br.readLine())) {
+                if (content.contains("#"))
+                    continue;
+                fileAttributes.add(content);
+            }
+        } catch (IOException e){
+            System.out.println("读取文件解析文件出错");
+            e.printStackTrace();
+        }
     }
 }

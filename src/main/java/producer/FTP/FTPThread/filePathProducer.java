@@ -20,7 +20,7 @@ class filePathProducer implements Runnable {
     private long lastTime;
 //    程序本次执行开始时间
     private long thisTime;
-    filePathProducer(BlockingQueue queue, String initPath,long lastTime,long thisTime) {
+    filePathProducer(BlockingQueue queue, String initPath, long lastTime, long thisTime) {
         this.queue = queue;
         this.initPath = initPath;
         this.lastTime = lastTime;
@@ -38,7 +38,7 @@ class filePathProducer implements Runnable {
             util.AllFilePath(ftpClient,queue,initPath,lastTime,thisTime);
         else System.out.println("创建Ftp连接失败，退出");
 //        关闭FTP连接
-        util.endFtp(ftpClient,Thread.currentThread().getName());
+        util.endFtp(ftpClient, Thread.currentThread().getName());
         System.out.println(Thread.currentThread().getName()+"处理结束---------");
     }
 }

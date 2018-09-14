@@ -19,33 +19,32 @@ import java.util.concurrent.TimeUnit;
  * 因为ftp服务器要用一个端口接收客户端的控制请求，
  * 另一个端口用于发送数据给客户端
  * 被动模式下FTP服务器上指定了一个端口范围超过这个端口范围的一半就会出问题
- *
+ * <p>
  * 再consumer的地方设置了10s内没有生产到4个文件路径就退出，
  * 应该在producer处同样添加超时退出机制超时关闭线程
- *
  */
-public class FTPStart implements Runnable{
-//        指定发送的topic
+public class FTPStart implements Runnable {
+    //        指定发送的topic
     private static String topic;
-//        指定FTP服务器上的文件初始文件夹
+    //        指定FTP服务器上的文件初始文件夹
     private static String initPath;
-//        下载文件失败后的重试次数
+    //        下载文件失败后的重试次数
     private static int retries;
-//    生产文件路径者和消费文件路径者的线程数量
+    //    生产文件路径者和消费文件路径者的线程数量
     private static int PathProducerNumber;
     private static int PathConsumerNumber;
-//    测试时定时任务的次数
+    //    测试时定时任务的次数
     private int times = 0;
-//    程序上次执行完成时间
+    //    程序上次执行完成时间
     private long lastTime;
-//    程序本次执行开始时间
+    //    程序本次执行开始时间
     private long thisTime;
 
     public static void main(String[] args) {
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
         FTPStart ftpStart = new FTPStart();
         ftpStart.lastTime = 0;
-        executor.scheduleWithFixedDelay(ftpStart,0,60, TimeUnit.SECONDS);
+        executor.scheduleWithFixedDelay(ftpStart, 0, 60, TimeUnit.SECONDS);
     }
 
     /**
@@ -63,18 +62,20 @@ public class FTPStart implements Runnable{
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        System.out.println("任务开始\t"+"\t"+times++);
-        System.out.println("lastTime "+format2.format(new Date(lastTime)));
-        System.out.println("thisTime "+format2.format(new Date(thisTime)));
-        initProperties();
+        System.out.println("任务开始\t" + "\t" + times++);
+        System.out.println("lastTime " + format2.format(new Date(lastTime)));
+        System.out.println("thisTime " + format2.format(new Date(thisTime)));
+        if (!initProperties()) {
+            return;
+        }
         ArrayBlockingQueue queue = new ArrayBlockingQueue(1000);
-        filePathProducer pathProducer = new filePathProducer(queue,initPath,lastTime,thisTime);
-        filePathConsumer pathConsumer = new filePathConsumer(queue,retries,topic,PathConsumerNumber);
+        filePathProducer pathProducer = new filePathProducer(queue, initPath, lastTime, thisTime);
+        filePathConsumer pathConsumer = new filePathConsumer(queue, retries, topic, PathConsumerNumber);
         List<Thread> pList = new ArrayList<>();
         List<Thread> cList = new ArrayList<>();
-        
-        for (int i =0;i<PathProducerNumber;i++){
-            Thread t = new Thread(pathProducer,"生产者-"+i);
+
+        for (int i = 0; i < PathProducerNumber; i++) {
+            Thread t = new Thread(pathProducer, "生产者-" + i);
             pList.add(t);
             t.start();
         }
@@ -84,12 +85,12 @@ public class FTPStart implements Runnable{
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (queue.size()>PathConsumerNumber)
+            if (queue.size() > PathConsumerNumber)
                 break;
         }
-        if (queue.size()>PathConsumerNumber){
-            for (int i =0;i<PathConsumerNumber;i++){
-                Thread t = new Thread(pathConsumer,"消费者-"+i);
+        if (queue.size() > PathConsumerNumber) {
+            for (int i = 0; i < PathConsumerNumber; i++) {
+                Thread t = new Thread(pathConsumer, "消费者-" + i);
                 cList.add(t);
                 t.start();
             }
@@ -108,24 +109,25 @@ public class FTPStart implements Runnable{
                 }
             }
             lastTime = thisTime;
-            System.out.println("任务执行完成 "+times+" 次 "+format.format(Calendar.getInstance().getTime()));
-        }else {
+            System.out.println("任务执行完成 " + times + " 次 " + format.format(Calendar.getInstance().getTime()));
+        } else {
             for (Thread pThread :
                     pList) {
                 pThread.stop();
             }
             System.out.println("生产者未能在指定时间内生产文件路径等待下次启动");
         }
-        
+
     }
 
     /**
      * 初始化程序所需要的配置项
      */
-    private static void initProperties(){
+    private static boolean initProperties() {
+        boolean flag = false;
         Properties props = new Properties();
         InputStream is = FTPStart.class.getClassLoader().getResourceAsStream("myInit.properties");
-        try{
+        try {
             props.load(is);
 //        指定发送的topic
             topic = props.getProperty("topic");
@@ -135,23 +137,15 @@ public class FTPStart implements Runnable{
             retries = Integer.parseInt(props.getProperty("ftpFileRetries"));
             PathProducerNumber = Integer.parseInt(props.getProperty("ftpPathProducerNumber"));
             PathConsumerNumber = Integer.parseInt(props.getProperty("ftpPathConsumerNumber"));
+            flag = true;
         } catch (IOException e) {
             System.out.println("没有读取到配置文件，将使用默认设置");
-            defaultProperties();
-        } catch (Exception e){
+            e.printStackTrace();
+        } catch (Exception e) {
             System.out.println("读取配置文件内容不匹配，将使用默认设置");
-            defaultProperties();
+            e.printStackTrace();
         }
+        return flag;
     }
 
-    /**
-     * 默认FTP配置项
-     */
-    private static void defaultProperties(){
-        topic = "webTopic";
-        initPath = "./code/jupyter/tmp";
-        retries = 3;
-        PathProducerNumber = 2;
-        PathConsumerNumber = 4;
-    }
 }

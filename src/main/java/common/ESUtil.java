@@ -45,8 +45,8 @@ public class ESUtil {
     /**
      * Get index 获取文档相当于读取数据库的一行数据
      */
-    public void getIndex(int id){
-        GetResponse getresponse = client.prepareGet("zxtest", "person", id+"").execute().actionGet();
+    public void getIndex(String index,String type,int id){
+        GetResponse getresponse = client.prepareGet(index, type, id+"").execute().actionGet();
         System.out.println(getresponse.getSourceAsString());
     }
 
@@ -77,8 +77,8 @@ public class ESUtil {
     /*
      *Delete index 相当于删除一行数据
      */
-    public void delete(int id){
-        DeleteResponse deleteresponse = client.prepareDelete("zxtest", "person",id+"").execute().actionGet();
+    public void delete(String index,String type,int id){
+        DeleteResponse deleteresponse = client.prepareDelete(index, type,String.valueOf(id)).execute().actionGet();
         System.out.println(deleteresponse.getVersion());
     }
 
