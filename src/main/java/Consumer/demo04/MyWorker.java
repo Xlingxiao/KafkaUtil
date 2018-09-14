@@ -7,6 +7,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
+import org.elasticsearch.ElasticsearchException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,26 +73,38 @@ public class MyWorker implements Runnable{
         ConsumerRecords<String,String> records;
         Gson gson = new Gson();
         Map<String,?> msg = new HashMap<>();
-        while (true){
+        try {
+            while (true) {
 //            每5000ms从集群中获取一次数据
-            records = consumer.poll(Duration.ofMillis(1000));
+                records = consumer.poll(Duration.ofMillis(1000));
 //            一个records中可能包含多条消息遍历这些消息
-            for (ConsumerRecord record : records){
-                try{
-                    msg = gson.fromJson(record.value()+"",msg.getClass());
-                    esUtil.insertOneData(Index,Type,msg);
-                    consumer.commitSync();
-                } catch (JsonSyntaxException e){
-                    System.out.println("发送过来的不是json数据自动忽略");
-                    consumer.commitSync();
+                for (ConsumerRecord record : records) {
+                    try {
+                        msg = gson.fromJson(record.value() + "", msg.getClass());
+                        esUtil.insertOneData(Index, Type, msg);
+                        consumer.commitSync();
+                    } catch (JsonSyntaxException e) {
+                        System.out.println("发送过来的不是json数据自动忽略" + record.value());
+                        consumer.commitSync();
+                    } catch (ElasticsearchException e) {
+                        /**
+                         *  数据插入失败后的处理方式
+                         *  1，重试一定次数，仍失败后写入外部文件
+                         *  2，重试一定次数后丢弃，下次启动消费者时会自动获取
+                         *  3，直接不管&不提交，等待下次启动消费者时自动获取
+                         */
+                        System.out.println("数据插入ES失败");
+                    }
                 }
             }
+        } finally {
+//            关闭ES的连接
+            esUtil.close();
         }
-
     }
 
     //        创建kafka consumer
-    public static KafkaConsumer<String,String> createConsumer(){
+    static KafkaConsumer<String,String> createConsumer(){
 //        获取配置文件
         Properties props = new Properties();
         InputStream is = MyWorker.class.getClassLoader().getResourceAsStream("kafka/ControlOffsetConsumer.properties");

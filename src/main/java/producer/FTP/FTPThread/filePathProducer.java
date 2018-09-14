@@ -1,5 +1,6 @@
 package producer.FTP.FTPThread;
 
+import common.FTPUtil;
 import org.apache.commons.net.ftp.FTPClient;
 
 import java.util.concurrent.BlockingQueue;

@@ -1,4 +1,4 @@
-package producer.FTP.FTPThread;
+package common;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;

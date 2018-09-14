@@ -1,5 +1,6 @@
 package producer.FTP.FTPThread;
 
+import common.FTPUtil;
 import org.apache.commons.net.ftp.FTPClient;
 import common.myProducer;
 
@@ -50,8 +51,6 @@ class filePathConsumer implements Runnable {
         FTPUtil util = new FTPUtil();
         FTPClient ftpClient = util.getFtpClient();
         if (ftpClient!=null){
-//            处理文件内容对象
-            ProcessContent process = new ProcessContent();
 //            发送处理过的文件内容的对象
             myProducer myproducer = new myProducer();
             StringBuilder stringBuilder;
@@ -67,8 +66,6 @@ class filePathConsumer implements Runnable {
 //                下载文件内容,指定文件下载失败后的重试次数
                 stringBuilder = util.getDownload(ftpClient,path,retries);
                 if (stringBuilder==null||stringBuilder.length()<1) continue;
-//                对文件内容进行处理
-                stringBuilder = process.startProcess(stringBuilder);
 //                查看处理后的文件第一个“，”之前的内容t
                 System.out.println(stringBuilder.toString().split(",",2)[0]);
 //                发送处理过的内容
