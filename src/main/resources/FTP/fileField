@@ -1,0 +1,10 @@
+#文件内字段填写错误会导致插入数据库时字段出问题
+#字段指定数量低于FTP文件中的字段将只会插入指定字段的数据，后面的数据将丢弃
+#字段指定数量超过FTP文件中的字段 将不会插入任何数据进入ES数据库
+# 顺序错误也会导致插入数据库后内容与属性不匹配
+name
+fileTime
+lastDescription
+lastTime
+thisDescription
+thisTime
